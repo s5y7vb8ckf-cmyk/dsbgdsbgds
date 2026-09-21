@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="theme-color" content="#111827">
-<title>Restaurant Together 3D | Realistic Expansion</title>
+<title>Restaurant Together 3D | Mobile & Desktop</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -84,6 +84,24 @@ input:focus{border-color:#f59e0b;box-shadow:0 0 0 3px #f59e0b20}
   pointer-events:auto;border:1px solid #ef444455;background:#3b1118db;color:#fecaca;
   border-radius:13px;padding:9px 12px;font-weight:900;cursor:pointer
 }
+
+.dayBtn{
+  pointer-events:auto;border:1px solid #22c55e66;background:#12351fdd;color:#bbf7d0;
+  border-radius:13px;padding:9px 12px;font-weight:1000;cursor:pointer
+}
+.dayBtn.closeDay{border-color:#f59e0b66;background:#3b2a10dd;color:#fde68a}
+.dayStatusOpen{color:#86efac;font-weight:1000}
+.dayStatusClosed{color:#fca5a5;font-weight:1000}
+.dayReport{
+  width:min(520px,92vw);padding:23px;border-radius:24px;background:#0a141cf2;
+  border:1px solid #365160;box-shadow:0 30px 90px #000c;text-align:center
+}
+.dayReport h2{margin:0 0 8px}.dayReportGrid{
+  display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin:16px 0
+}
+.dayReportItem{padding:12px;border-radius:14px;background:#13232f;border:1px solid #294555}
+.dayReportItem b{display:block;font-size:19px;color:#fde68a;margin-top:4px}
+@media(max-width:600px){.dayReportGrid{grid-template-columns:1fr 1fr}}
 
 .orders{
   position:absolute;z-index:29;right:12px;top:67px;width:260px;max-height:45vh;overflow:hidden;
@@ -165,6 +183,41 @@ input:focus{border-color:#f59e0b;box-shadow:0 0 0 3px #f59e0b20}
   width:100%;padding:11px;border-radius:11px;border:1px solid #344955;background:#09131b;color:white;font:inherit
 }
 .cashierHint{padding:10px 12px;border-radius:12px;background:#17252f;color:#c9d8df;font-size:12px;line-height:1.7;margin-bottom:10px}
+
+.simOverlay{
+  position:absolute;inset:0;z-index:90;display:grid;place-items:center;padding:16px;
+  background:#020609b8;backdrop-filter:blur(10px)
+}
+.simPanel{
+  width:min(940px,96vw);max-height:90%;overflow:auto;border-radius:24px;
+  background:#0a1118;border:1px solid #38505f;box-shadow:0 32px 100px #000d;color:#edf5f8
+}
+.simTop{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 16px;
+  background:#121d25;border-bottom:1px solid #304653;position:sticky;top:0;z-index:2
+}
+.simTop b{color:#fde68a}.simClose{
+  width:42px;height:36px;border:0;border-radius:10px;background:#3b1118;color:#fecaca;font-weight:1000;cursor:pointer
+}
+.cctvBody{padding:12px}
+#cctvCanvas{display:block;width:100%;aspect-ratio:16/9;border-radius:15px;background:#05080b;border:1px solid #304653}
+.cctvLegend{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;font-size:11px;color:#b8cbd5}
+.camChip{padding:6px 9px;border-radius:999px;background:#14212a;border:1px solid #314854}
+.applianceBody{padding:18px}
+.applianceScreen{
+  padding:15px;border-radius:15px;background:#061018;border:1px solid #244252;margin-bottom:13px;
+  text-align:center;font-family:monospace
+}
+.applianceScreen .bigTemp{font-size:36px;color:#fda4af;font-weight:1000}
+.applianceButtons{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.applianceBtn{
+  min-height:54px;border-radius:13px;border:1px solid #3d5664;background:#172630;color:#fff;font-weight:900;cursor:pointer
+}
+.applianceBtn.active{background:#8a3a16;border-color:#f59e0b}.applianceBtn.start{background:#166534}.applianceBtn.off{background:#3f3f46}
+.applianceNote{margin-top:12px;color:#b7cad4;font-size:12px;line-height:1.7;text-align:center}
+@media(max-width:700px){
+  .applianceButtons{grid-template-columns:1fr 1fr}.simPanel{max-height:88%}
+}
 @media(max-width:700px){
   .laptopGrid{grid-template-columns:1fr}.manualForm{grid-template-columns:1fr}.laptop{max-height:88%}
 }
@@ -179,23 +232,80 @@ input:focus{border-color:#f59e0b;box-shadow:0 0 0 3px #f59e0b20}
 .progressFill{height:100%;width:0;background:linear-gradient(90deg,#f59e0b,#22c55e)}
 
 .cameraTools{
-  position:absolute;z-index:31;left:12px;top:130px;display:flex;gap:6px
+  position:absolute;z-index:31;left:12px;top:130px;display:flex;gap:6px;flex-wrap:wrap;max-width:260px
 }
 .camBtn{
   height:43px;min-width:44px;padding:0 11px;border-radius:13px;border:1px solid #304958;
   background:#0b1720df;color:#e2edf2;font-weight:900;cursor:pointer;backdrop-filter:blur(10px)
 }
 
-.controls{
-  position:absolute;z-index:32;left:12px;bottom:12px;display:grid;
-  grid-template-columns:55px 55px 55px 82px;grid-template-rows:55px 55px;gap:6px;direction:ltr
+.controls{display:none}
+.mobileControls{
+  position:absolute;z-index:34;inset:0;pointer-events:none;display:none
 }
-.ctrl{
-  border:1px solid #ffffff24;background:#102633df;color:#fff;border-radius:17px;
-  font-weight:900;font-size:20px;touch-action:none;user-select:none
+.joystick{
+  position:absolute;left:20px;bottom:22px;width:138px;height:138px;border-radius:50%;
+  transform:scale(var(--mobile-ui-scale,1));transform-origin:bottom left;
+  border:1px solid #ffffff28;background:#0b172080;backdrop-filter:blur(7px);
+  box-shadow:0 12px 35px #0006;pointer-events:auto;touch-action:none
 }
-.ctrl:active{background:#285368}.up{grid-column:2}.left{grid-row:2;grid-column:1}.down{grid-row:2;grid-column:2}.right{grid-row:2;grid-column:3}
-.act{grid-row:1/3;grid-column:4;background:linear-gradient(145deg,#f59e0b,#92400e);font-size:13px}
+.joystick:after{
+  content:"";position:absolute;inset:24px;border-radius:50%;border:1px solid #ffffff18
+}
+.joystickKnob{
+  position:absolute;left:50%;top:50%;width:58px;height:58px;border-radius:50%;
+  transform:translate(-50%,-50%);background:#dbeafecc;border:2px solid #ffffffaa;
+  box-shadow:0 7px 20px #0008;pointer-events:none
+}
+.mobileActions{
+  position:absolute;right:16px;bottom:18px;display:grid;grid-template-columns:68px 68px;gap:9px;
+  pointer-events:auto;transform:scale(var(--mobile-ui-scale,1));transform-origin:bottom right
+}
+.mobileBtn{
+  min-height:62px;border:1px solid #ffffff28;border-radius:19px;background:#102633df;
+  color:#fff;font-weight:1000;touch-action:none;user-select:none;box-shadow:0 8px 24px #0005
+}
+.mobileBtn:active{transform:scale(.96);background:#285368}
+.mobileBtn.action{background:linear-gradient(145deg,#f59e0b,#92400e)}
+.mobileBtn.run{background:linear-gradient(145deg,#2563eb,#1e3a8a)}
+.mobileBtn.view{grid-column:1/3;min-height:46px}
+.desktopQuick{
+  position:absolute;z-index:31;left:12px;bottom:12px;display:flex;gap:7px;align-items:center
+}
+.quickKey{
+  padding:8px 10px;border-radius:12px;background:#0b1720d9;border:1px solid #304958;
+  color:#dce9ef;font-size:11px;backdrop-filter:blur(8px)
+}
+.gameTools{
+  position:absolute;z-index:32;left:12px;top:184px;display:flex;gap:6px;flex-wrap:wrap;max-width:280px
+}
+.settingsOverlay{
+  position:absolute;inset:0;z-index:95;display:grid;place-items:center;padding:16px;
+  background:#020609b8;backdrop-filter:blur(10px)
+}
+.settingsCard{
+  width:min(560px,94vw);max-height:90vh;overflow:auto;border-radius:24px;
+  background:#0a131b;border:1px solid #38505f;box-shadow:0 30px 100px #000d;padding:18px
+}
+.settingsCard h2{margin:0 0 4px}.settingsCard p{margin:0 0 14px;color:#9fb4c0;font-size:12px;line-height:1.7}
+.settingRow{padding:12px 0;border-top:1px solid #ffffff10}
+.settingRow label{display:flex;justify-content:space-between;gap:10px;margin-bottom:8px;font-size:13px}
+.settingRow select,.settingRow input[type="range"]{
+  width:100%;padding:10px;border-radius:11px;border:1px solid #344955;background:#09131b;color:#fff
+}
+.settingActions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+.perfBadge{
+  position:absolute;z-index:28;left:12px;top:235px;padding:7px 9px;border-radius:11px;
+  background:#0b1720bb;border:1px solid #304958;color:#9ed7ea;font-size:10px
+}
+@media(pointer:coarse),(max-width:900px){
+  .mobileControls{display:block}.desktopQuick{display:none}
+  .gameTools{top:auto;bottom:180px;left:auto;right:12px;max-width:160px}
+  .perfBadge{left:auto;right:12px;top:auto;bottom:330px}
+}
+@media(pointer:fine) and (min-width:901px){
+  .mobileControls{display:none}.desktopQuick{display:flex}
+}
 
 .toast{
   position:absolute;z-index:50;left:50%;bottom:150px;transform:translateX(-50%);
@@ -209,13 +319,36 @@ input:focus{border-color:#f59e0b;box-shadow:0 0 0 3px #f59e0b20}
   color:#b8cbd5;font-size:11px;text-shadow:0 2px 8px #000;white-space:nowrap
 }
 
+.crosshair{
+  position:absolute;z-index:24;left:50%;top:50%;width:22px;height:22px;transform:translate(-50%,-50%);
+  pointer-events:none;opacity:.88
+}
+.crosshair:before,.crosshair:after{
+  content:"";position:absolute;background:#ffffffd8;box-shadow:0 0 5px #000
+}
+.crosshair:before{width:2px;height:22px;left:10px;top:0}
+.crosshair:after{height:2px;width:22px;left:0;top:10px}
+.fpHint{
+  position:absolute;z-index:23;left:50%;top:49%;transform:translate(-50%,22px);
+  color:#dbeafe;font-size:10px;text-shadow:0 2px 7px #000;pointer-events:none
+}
+.shiftClock{
+  position:absolute;z-index:30;right:284px;top:68px;padding:9px 12px;border-radius:15px;
+  background:#0b1720e5;border:1px solid #304958;backdrop-filter:blur(10px);font-size:12px
+}
+.shiftClock b{color:#fde68a}
+@media(max-width:760px){
+  .shiftClock{right:auto;left:10px;top:104px}.crosshair{width:18px;height:18px}
+  .crosshair:before{height:18px;left:8px}.crosshair:after{width:18px;top:8px}
+}
+
 @media(max-width:760px){
   .card{padding:22px}.features{grid-template-columns:1fr}.orders{width:170px;top:106px}
   .order{padding:8px}.task{top:108px;width:55vw;padding:8px 10px}.task strong{font-size:12px}.task span{font-size:9px}
-  .held{top:auto;bottom:130px;left:auto;right:10px}.roleBadge{top:auto;bottom:190px;left:auto;right:10px}
-  .queueBox{right:10px;top:330px;width:170px}.cameraTools{top:auto;bottom:130px;left:10px}
-  .controls{left:8px;bottom:8px;grid-template-columns:50px 50px 50px 70px;grid-template-rows:50px 50px}
-  .help{display:none}.cluster{max-width:80vw}.pill{padding:7px 9px;font-size:11px}
+  .held{top:auto;bottom:178px;left:auto;right:10px}.roleBadge{top:auto;bottom:236px;left:auto;right:10px}
+  .queueBox{right:10px;top:305px;width:160px}.cameraTools{top:auto;bottom:280px;left:10px}
+  .help{display:none}.cluster{max-width:76vw}.pill{padding:7px 9px;font-size:10px}
+  .orders{max-height:30vh}.task{top:102px}
 }
 </style>
 </head>
@@ -225,12 +358,12 @@ input:focus{border-color:#f59e0b;box-shadow:0 0 0 3px #f59e0b20}
   <div class="card">
     <div class="logo">🍽️</div>
     <h1>Restaurant Together 3D</h1>
-    <div class="sub">محاكاة مطعم جماعية: افتح غرفة وشارك الكود مع أصدقائك، ثم قسموا العمل بينكم لتحضير الطلبات وخدمة الزبائن.</div>
+    <div class="sub">محاكاة مطعم جماعية: افتح غرفة وشارك الكود مع أصدقائك، ثم افتح يوم العمل وابدؤوا استقبال الزبائن. عند نهاية الدوام أغلق اليوم وشاهد تقرير الأداء.</div>
 
     <div class="features">
       <div class="feature"><b>👨‍🍳 اطبخوا معًا</b><span>كل لاعب يقدر يحمل مكوّن ويكمل مرحلة مختلفة من الوصفة.</span></div>
       <div class="feature"><b>💳 كاشير أساسي</b><span>لا يدخل طلب للمطبخ حتى يستلمه لاعب يعمل على الكاشير.</span></div>
-      <div class="feature"><b>🏗️ مطعم يتطور</b><span>لفلات وXP وتوسعات وطاولات جديدة ونظافة وسمعة وزبائن يتفاعلون معك.</span></div>
+      <div class="feature"><b>📱 جوال + 💻 لابتوب</b><span>عصا حركة للجوال، كاميرا لمس، وجري وتفاعل؛ وWASD واختصارات كاملة على الكمبيوتر.</span></div>
     </div>
 
     <div class="field"><label>اسمك داخل المطعم</label><input id="playerName" maxlength="24" placeholder="مثال: عبدالملك"></div>
@@ -254,8 +387,12 @@ input:focus{border-color:#f59e0b;box-shadow:0 0 0 3px #f59e0b20}
       <div class="pill money">💵 <span id="balanceView">0</span> ريال</div>
       <div class="pill levelPill">⭐ Lv <span id="levelView">1</span> • <span id="xpView">0</span> XP</div>
       <div class="pill healthPill">😊 <b id="repView">100</b>% • 🧹 <b id="cleanView">100</b>%</div>
+      <div class="pill">اليوم <b id="dayNumberView">1</b> • <span id="dayStatusView" class="dayStatusClosed">مغلق</span></div>
     </div>
-    <button id="exitBtn" class="exit">خروج</button>
+    <div style="display:flex;gap:7px;pointer-events:auto">
+      <button id="dayToggleBtn" class="dayBtn hidden" type="button">فتح اليوم</button>
+      <button id="exitBtn" class="exit">خروج</button>
+    </div>
   </div>
 
   <aside class="orders">
@@ -277,10 +414,15 @@ input:focus{border-color:#f59e0b;box-shadow:0 0 0 3px #f59e0b20}
   </div>
 
   <div class="cameraTools">
+    <button id="cameraModeBtn" class="camBtn" type="button">👁️ منظور أول</button>
     <button id="resetCamBtn" class="camBtn" type="button">🎥</button>
     <button id="zoomInBtn" class="camBtn" type="button">＋</button>
     <button id="zoomOutBtn" class="camBtn" type="button">−</button>
   </div>
+
+  <div id="shiftClock" class="shiftClock">🕒 <b id="clockView">08:00</b> • <span id="dayPhaseView">صباح</span></div>
+  <div id="crosshair" class="crosshair hidden"></div>
+  <div id="fpHint" class="fpHint hidden">حرّك الماوس/اسحب للنظر</div>
 
   <div id="interactBox" class="interact hidden"></div>
 
@@ -289,16 +431,114 @@ input:focus{border-color:#f59e0b;box-shadow:0 0 0 3px #f59e0b20}
     <div class="progress"><div id="progressFill" class="progressFill"></div></div>
   </div>
 
-  <div class="controls">
-    <button class="ctrl up" data-key="ArrowUp">▲</button>
-    <button class="ctrl left" data-key="ArrowLeft">◀</button>
-    <button class="ctrl down" data-key="ArrowDown">▼</button>
-    <button class="ctrl right" data-key="ArrowRight">▶</button>
-    <button id="actionBtn" class="ctrl act">استخدم<br>🍳</button>
+  <div class="mobileControls">
+    <div id="joystick" class="joystick"><div id="joystickKnob" class="joystickKnob"></div></div>
+    <div class="mobileActions">
+      <button id="mobileActionBtn" class="mobileBtn action" type="button">استخدم<br>🍳</button>
+      <button id="mobileRunBtn" class="mobileBtn run" type="button">جري<br>🏃</button>
+      <button id="mobileViewBtn" class="mobileBtn view" type="button">👁️ تغيير المنظور</button>
+    </div>
   </div>
 
-  <div class="help">WASD / الأسهم للحركة • E للتفاعل • اسحب الشاشة لتحريك الكاميرا • عجلة الماوس للتقريب</div>
+  <div class="desktopQuick">
+    <div class="quickKey">WASD حركة</div>
+    <div class="quickKey">Shift جري</div>
+    <div class="quickKey">E استخدام</div>
+    <div class="quickKey">V منظور</div>
+    <div class="quickKey">F ملء الشاشة</div>
+  </div>
+
+  <div class="gameTools">
+    <button id="settingsBtn" class="camBtn" type="button">⚙️ إعدادات</button>
+    <button id="fullscreenBtn" class="camBtn" type="button">⛶ ملء الشاشة</button>
+  </div>
+  <div id="perfBadge" class="perfBadge">FPS -- • Auto</div>
+
+  <div class="help">WASD للحركة • Shift للجري • E للتفاعل • V للمنظور • F ملء الشاشة • اسحب للنظر</div>
   <div id="toast" class="toast"></div>
+
+  <div id="dayReportOverlay" class="simOverlay hidden">
+    <div class="dayReport">
+      <div style="font-size:48px">📊</div>
+      <h2 id="dayReportTitle">تقرير اليوم</h2>
+      <p style="color:#a9bdc9">انتهى يوم العمل. هذا ملخص أداء المطعم:</p>
+      <div class="dayReportGrid">
+        <div class="dayReportItem">المبيعات<b id="daySalesView">0 ريال</b></div>
+        <div class="dayReportItem">XP المكتسب<b id="dayXpGainView">0</b></div>
+        <div class="dayReportItem">السمعة<b id="dayRepReportView">100%</b></div>
+        <div class="dayReportItem">النظافة<b id="dayCleanReportView">100%</b></div>
+      </div>
+      <button id="closeDayReportBtn" class="btn primary" style="width:100%" type="button">إغلاق التقرير</button>
+    </div>
+  </div>
+
+  <div id="settingsOverlay" class="settingsOverlay hidden">
+    <div class="settingsCard">
+      <h2>⚙️ إعدادات اللعبة</h2>
+      <p>يمكنك تخفيف الجرافيكس إذا كان جهازك يعلق، أو رفعها على الأجهزة الأقوى.</p>
+
+      <div class="settingRow">
+        <label><span>جودة الجرافيكس</span><b id="qualityLabel">متوسط</b></label>
+        <select id="qualitySelect">
+          <option value="low">منخفض — أسرع</option>
+          <option value="medium" selected>متوسط</option>
+          <option value="high">عالي — أجمل</option>
+        </select>
+      </div>
+
+      <div class="settingRow">
+        <label><span>حساسية الكاميرا</span><b id="sensitivityLabel">100%</b></label>
+        <input id="sensitivityRange" type="range" min="50" max="180" value="100">
+      </div>
+
+      <div class="settingRow">
+        <label><span>حجم واجهة الجوال</span><b id="uiScaleLabel">100%</b></label>
+        <input id="uiScaleRange" type="range" min="80" max="125" value="100">
+      </div>
+
+      <div class="settingActions">
+        <button id="closeSettingsBtn" class="btn primary" type="button">حفظ وإغلاق</button>
+        <button id="resetSettingsBtn" class="btn" type="button">إعادة الافتراضي</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="cctvOverlay" class="simOverlay hidden">
+    <div class="simPanel">
+      <div class="simTop"><b>📹 غرفة المراقبة</b><button id="closeCctvBtn" class="simClose" type="button">✕</button></div>
+      <div class="cctvBody">
+        <canvas id="cctvCanvas" width="960" height="540"></canvas>
+        <div class="cctvLegend">
+          <span class="camChip">CAM 1 • الكاشير</span>
+          <span class="camChip">CAM 2 • الصالة</span>
+          <span class="camChip">CAM 3 • المطبخ</span>
+          <span class="camChip">CAM 4 • المدخل</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="applianceOverlay" class="simOverlay hidden">
+    <div class="simPanel" style="width:min(620px,94vw)">
+      <div class="simTop"><b id="applianceTitle">🔥 لوحة الجهاز</b><button id="closeApplianceBtn" class="simClose" type="button">✕</button></div>
+      <div class="applianceBody">
+        <div class="applianceScreen">
+          <div id="appliancePowerText">OFF</div>
+          <div id="applianceTempView" class="bigTemp">180°C</div>
+          <div id="applianceStatusText">جاهز</div>
+        </div>
+        <div class="applianceButtons">
+          <button class="applianceBtn tempBtn" data-temp="160" type="button">160°</button>
+          <button class="applianceBtn tempBtn active" data-temp="180" type="button">180°</button>
+          <button class="applianceBtn tempBtn" data-temp="220" type="button">220°</button>
+          <button id="appliancePowerBtn" class="applianceBtn off" type="button">تشغيل / إيقاف</button>
+          <button id="applianceStartBtn" class="applianceBtn start" type="button">ابدأ الطبخ ▶</button>
+          <button id="applianceCancelBtn" class="applianceBtn" type="button">رجوع</button>
+        </div>
+        <div id="applianceNote" class="applianceNote"></div>
+      </div>
+    </div>
+  </div>
 
   <div id="laptopOverlay" class="laptopOverlay hidden">
     <div class="laptop">
@@ -335,25 +575,39 @@ const interactBox=$("#interactBox"),progressWrap=$("#progressWrap"),progressFill
 const roleView=$("#roleView"),queueInfo=$("#queueInfo");
 const laptopOverlay=$("#laptopOverlay"),laptopBody=$("#laptopBody");
 const levelView=$("#levelView"),xpView=$("#xpView"),repView=$("#repView"),cleanView=$("#cleanView");
+const crosshair=$("#crosshair"),fpHint=$("#fpHint"),clockView=$("#clockView"),dayPhaseView=$("#dayPhaseView");
+const cctvOverlay=$("#cctvOverlay"),cctvCanvas=$("#cctvCanvas"),applianceOverlay=$("#applianceOverlay");
+const dayToggleBtn=$("#dayToggleBtn"),dayStatusView=$("#dayStatusView"),dayNumberView=$("#dayNumberView"),dayReportOverlay=$("#dayReportOverlay");
+const settingsOverlay=$("#settingsOverlay"),qualitySelect=$("#qualitySelect"),sensitivityRange=$("#sensitivityRange"),uiScaleRange=$("#uiScaleRange"),perfBadge=$("#perfBadge");
+const joystick=$("#joystick"),joystickKnob=$("#joystickKnob");
+const applianceTitle=$("#applianceTitle"),appliancePowerText=$("#appliancePowerText"),applianceTempView=$("#applianceTempView"),applianceStatusText=$("#applianceStatusText"),applianceNote=$("#applianceNote");
 
 const keys=new Set(),players=new Map(),orders=new Map(),playerMeshes=new Map();
 let user=null,room=null,me=null,roomChannel=null,playerChannel=null,orderChannel=null,inventoryChannel=null,trashChannel=null;
 let heartbeat=null,running=false,lastSync=0,lastOrderAttempt=0,hostOrderTimer=0;
 let nearestStation=null,actionJob=null,audioCtx=null;
 let velX=0,velZ=0;
+let joystickX=0,joystickY=0,joystickPointer=null,runHeld=false;
+let cameraSensitivity=1,uiScale=1,graphicsQuality="medium";
+let fpsFrames=0,fpsLast=performance.now(),fpsValue=0;
 let inventory={meat:0,vegetables:0,pasta:0};
 let laptopTab="customers";
-let nearestTrash=null,lastPatienceCheck=0;
-const trashItems=new Map(),trashMeshes=new Map(),completingOrders=new Set(),complaintLocks=new Set();
+let nearestTrash=null,lastPatienceCheck=0,lastCustomerServerTick=0;
+const trashItems=new Map(),trashMeshes=new Map(),completingOrders=new Set(),complaintLocks=new Set(),eatingLocks=new Set();
+let cctvRenderer=null,cctvCameras=[],cctvOpen=false;
+let applianceOpen=false,applianceKind=null,appliancePower=false,applianceTemp=180;
 
 /* ----------------- Three.js ----------------- */
 let scene,camera,renderer,clock,pmrem;
 let restaurantGroup,playersGroup,customersGroup,labelsGroup,trashGroup;
 let expansion2Group,expansion3Group,kitchenDoorPivot,rightExpansionShutter,leftExpansionShutter;
+let ambientLights=[],ceilingGroup,detailGroup;
 let ownVisualY=0;
 
 let camYaw=0,camPitch=.47,camDist=10.5;
+let cameraMode="third"; // third | first
 let dragging=false,pointerId=null,lastPX=0,lastPY=0;
+let shiftStartedAt=Date.now();
 
 const collisions=[],expansion2Collisions=[],expansion3Collisions=[];
 const stations=[];
@@ -537,8 +791,75 @@ function updateRoomHUD(){
   xpView.textContent=`${room.xp||0}/${(room.level||1)*100}`;
   repView.textContent=room.reputation??100;
   cleanView.textContent=room.cleanliness??100;
+  dayNumberView.textContent=room.day_number||1;
+  dayStatusView.textContent=room.day_open?"مفتوح":"مغلق";
+  dayStatusView.className=room.day_open?"dayStatusOpen":"dayStatusClosed";
+
+  if(isHost()){
+    dayToggleBtn.classList.remove("hidden");
+    dayToggleBtn.textContent=room.day_open?"إغلاق اليوم":"فتح اليوم";
+    dayToggleBtn.classList.toggle("closeDay",!!room.day_open);
+  }else{
+    dayToggleBtn.classList.add("hidden");
+  }
+
   updateExpansionVisuals();
   renderLaptop();
+}
+function applyGraphicsQuality(q){
+  graphicsQuality=q||"medium";
+  if(!renderer)return;
+
+  const coarse=matchMedia("(pointer:coarse)").matches || innerWidth<900;
+  const dpr=devicePixelRatio||1;
+  const cap=graphicsQuality==="low"?.9:graphicsQuality==="high"?(coarse?1.35:1.75):(coarse?1.15:1.45);
+  renderer.setPixelRatio(Math.min(dpr,cap));
+  renderer.shadowMap.enabled=graphicsQuality!=="low";
+
+  scene.fog.near=graphicsQuality==="low"?24:30;
+  scene.fog.far=graphicsQuality==="low"?52:graphicsQuality==="high"?82:68;
+
+  qualitySelect.value=graphicsQuality;
+  $("#qualityLabel").textContent=graphicsQuality==="low"?"منخفض":graphicsQuality==="high"?"عالي":"متوسط";
+  perfBadge.textContent=`FPS ${fpsValue||"--"} • ${graphicsQuality==="low"?"Low":graphicsQuality==="high"?"High":"Med"}`;
+  localStorage.setItem("rt_quality",graphicsQuality);
+}
+function applyUiScale(v){
+  uiScale=Number(v)||1;
+  document.documentElement.style.setProperty("--mobile-ui-scale",uiScale);
+  uiScaleRange.value=String(Math.round(uiScale*100));
+  $("#uiScaleLabel").textContent=Math.round(uiScale*100)+"%";
+  localStorage.setItem("rt_ui_scale",String(uiScale));
+}
+function loadGameSettings(){
+  graphicsQuality=localStorage.getItem("rt_quality")||"medium";
+  cameraSensitivity=Number(localStorage.getItem("rt_sens")||"1");
+  uiScale=Number(localStorage.getItem("rt_ui_scale")||"1");
+  qualitySelect.value=graphicsQuality;
+  sensitivityRange.value=String(Math.round(cameraSensitivity*100));
+  $("#sensitivityLabel").textContent=Math.round(cameraSensitivity*100)+"%";
+  uiScaleRange.value=String(Math.round(uiScale*100));
+  $("#uiScaleLabel").textContent=Math.round(uiScale*100)+"%";
+}
+function openSettings(){settingsOverlay.classList.remove("hidden");keys.clear();runHeld=false;velX=0;velZ=0}
+function closeSettings(){settingsOverlay.classList.add("hidden")}
+async function toggleFullscreen(){
+  try{
+    if(!document.fullscreenElement)await document.documentElement.requestFullscreen();
+    else await document.exitFullscreen();
+  }catch{toast("المتصفح منع ملء الشاشة")}
+}
+function updateFps(t){
+  fpsFrames++;
+  if(t-fpsLast>=1000){
+    fpsValue=Math.round(fpsFrames*1000/(t-fpsLast));
+    fpsFrames=0;fpsLast=t;
+    perfBadge.textContent=`FPS ${fpsValue} • ${graphicsQuality==="low"?"Low":graphicsQuality==="high"?"High":"Med"}`;
+    if(graphicsQuality==="medium" && fpsValue<28 && (matchMedia("(pointer:coarse)").matches||innerWidth<900)){
+      applyGraphicsQuality("low");
+      toast("تم تخفيف الجرافيكس تلقائيًا للسلاسة ⚡");
+    }
+  }
 }
 function mat(color,rough=.6,metal=.05){
   return new THREE.MeshStandardMaterial({color,roughness:rough,metalness:metal});
@@ -555,8 +876,9 @@ function init3D(){
   camera.position.set(0,7,12);
 
   renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:"high-performance"});
-  const isMobile=matchMedia("(pointer:coarse)").matches || innerWidth<800;
-  renderer.setPixelRatio(Math.min(devicePixelRatio,isMobile?1.22:1.45));
+  const isMobile=matchMedia("(pointer:coarse)").matches || innerWidth<900;
+  loadGameSettings();
+  renderer.setPixelRatio(Math.min(devicePixelRatio,isMobile?1.15:1.45));
   renderer.setSize(innerWidth,innerHeight);
   renderer.shadowMap.enabled=true;
   renderer.shadowMap.type=THREE.PCFSoftShadowMap;
@@ -575,10 +897,13 @@ function init3D(){
   sun.shadow.bias=-.0002;scene.add(sun);
 
   restaurantGroup=new THREE.Group();playersGroup=new THREE.Group();customersGroup=new THREE.Group();labelsGroup=new THREE.Group();trashGroup=new THREE.Group();
-  scene.add(restaurantGroup,playersGroup,customersGroup,labelsGroup,trashGroup);
+  ceilingGroup=new THREE.Group();detailGroup=new THREE.Group();
+  scene.add(restaurantGroup,playersGroup,customersGroup,labelsGroup,trashGroup,ceilingGroup,detailGroup);
 
   buildRestaurant();
   installCameraControls();
+  applyGraphicsQuality(graphicsQuality);
+  applyUiScale(uiScale);
 
   clock=new THREE.Clock();
   addEventListener("resize",()=>{
@@ -748,6 +1073,96 @@ function buildRestaurant(){
     const customer=createCustomer(no,tablePositions[no]);customer.visible=false;customersGroup.add(customer);customerByTable.set(no,customer);
   }
 
+  // تفاصيل إضافية للمطعم: سقف، تكييف، كاميرات، منيو، مكتب صغير، مخزن
+  const ceilingMat=mat(0xf2eee7,.95,0);
+  const ceiling=new THREE.Mesh(new THREE.PlaneGeometry(30,28),ceilingMat);
+  ceiling.rotation.x=Math.PI/2;ceiling.position.set(0,5.95,1.5);ceiling.receiveShadow=true;ceilingGroup.add(ceiling);
+
+  // ألواح سقف وإضاءة خطية
+  for(let x=-12;x<=12;x+=6){
+    const strip=new THREE.Mesh(
+      new THREE.BoxGeometry(3.8,.08,.45),
+      new THREE.MeshStandardMaterial({color:0xffffff,emissive:0xfff2d0,emissiveIntensity:1.8,roughness:.4})
+    );
+    strip.position.set(x,5.82,-6.5);ceilingGroup.add(strip);
+  }
+
+  // فتحات تكييف
+  for(const x of [-8,0,8]){
+    const vent=new THREE.Mesh(new THREE.BoxGeometry(2,.08,.75),mat(0xbfc7cc,.45,.5));
+    vent.position.set(x,5.78,8.5);ceilingGroup.add(vent);
+  }
+
+  // منيو فوق الكاشير
+  for(let i=0;i<3;i++){
+    const panel=new THREE.Mesh(
+      new RoundedBoxGeometry(2.7,1.55,.09,3,.05),
+      new THREE.MeshStandardMaterial({color:0x15202a,emissive:0x0b1720,emissiveIntensity:.55,roughness:.35})
+    );
+    panel.position.set(5.9+i*3.0,4.2,-.95);panel.rotation.y=Math.PI;restaurantGroup.add(panel);
+    const menuText=labelSprite(["🍔 35","🥗 25","🍝 30"][i],"#fde68a","rgba(0,0,0,0)");
+    menuText.position.set(0,0,.07);menuText.scale.set(1.75,.48,1);panel.add(menuText);
+  }
+
+  // مكتب إدارة صغير بجانب الصالة
+  box(4,2.3,.25,wallMat,-12.8,1.15,2.2,false);
+  box(.25,2.3,4.5,wallMat,-10.9,1.15,4.3,false);
+  const officeDesk=box(2.7,.85,1.2,mat(0x5b3b27,.5,.04),-13.0,.42,4.0,.08);
+  const officeMonitor=box(.95,.55,.08,new THREE.MeshStandardMaterial({color:0x0f172a,emissive:0x1e40af,emissiveIntensity:.5}),-13.0,1.25,3.6,.04);
+  const officeChair=box(.8,.15,.8,chairMat,-13.0,.55,5.0,.06);
+  addCollision(-13.0,4.0,2.8,1.2);
+
+  // باب مخزن خلفي
+  const storageDoor=box(2.1,3.4,.12,mat(0x7b5a42,.58,.05),12.4,1.7,-11.78,.05);
+  const storageWindow=new THREE.Mesh(new THREE.BoxGeometry(.65,.85,.05),glassMat);storageWindow.position.set(0,.45,.08);storageDoor.add(storageWindow);
+
+  // رفوف مخزن واضحة
+  for(const y of [1.0,2.0,3.0]){
+    box(3.1,.10,.85,steel,12.5,y,-9.2,.03);
+  }
+
+  // مطفآت حريق ولوحات مخارج
+  const extinguisher=new THREE.Mesh(new THREE.CylinderGeometry(.18,.22,.75,14),mat(0xc81e1e,.5,.12));
+  extinguisher.position.set(-13.9,.75,-2.7);restaurantGroup.add(extinguisher);
+  const exitSign=labelSprite("EXIT","#ffffff","rgba(15,118,110,.95)");
+  exitSign.position.set(0,4.55,15.65);exitSign.scale.set(1.8,.5,1);labelsGroup.add(exitSign);
+
+  // غرفة مراقبة مستقلة داخل المكتب
+  box(4.0,2.7,.22,wallMat,-12.9,1.35,2.05,false);
+  box(.22,2.7,4.5,wallMat,-10.95,1.35,4.2,false);
+  const securityDesk=box(2.9,.85,1.15,mat(0x4b3528,.52,.05),-13.0,.43,4.25,.08);
+  const monitorMat=new THREE.MeshStandardMaterial({color:0x0b1117,emissive:0x0b5f7a,emissiveIntensity:.8,roughness:.3});
+  for(const [i,px,pz] of [[0,-13.55,3.62],[1,-12.48,3.62],[2,-13.55,4.18],[3,-12.48,4.18]]){
+    const mon=box(.88,.56,.08,monitorMat,px,1.42,pz,.035);
+    mon.rotation.x=-.08;
+    const led=new THREE.PointLight(0x38bdf8,1.4,2.5);led.position.set(px,1.45,pz+.25);detailGroup.add(led);
+  }
+  const securityChair=box(.75,.15,.75,chairMat,-13.0,.55,5.2,.06);
+  addCollision(-13.0,4.25,2.9,1.15);
+
+  // فرن احترافي داخل المطبخ مع أزرار حقيقية
+  const ovenBody=box(2.7,2.4,1.55,steel,10.1,1.2,-9.25,.10);addCollision(10.1,-9.25,2.7,1.55);
+  const ovenDoor=box(2.15,1.15,.07,new THREE.MeshPhysicalMaterial({color:0x111827,roughness:.16,metalness:.55,transparent:true,opacity:.92}),10.1,1.05,-8.45,.04);
+  const ovenGlow=new THREE.PointLight(0xff7a18,3.5,3.3);ovenGlow.position.set(10.1,1.05,-8.1);detailGroup.add(ovenGlow);
+  for(let i=0;i<4;i++){
+    const knob=new THREE.Mesh(new THREE.CylinderGeometry(.13,.13,.11,16),dark);
+    knob.rotation.x=Math.PI/2;knob.position.set(9.35+i*.5,2.08,-8.43);restaurantGroup.add(knob);
+  }
+  const ovenDisplay=box(.7,.28,.06,new THREE.MeshStandardMaterial({color:0x0f172a,emissive:0xef4444,emissiveIntensity:.8}),10.1,2.08,-8.42,.025);
+
+  // كاميرات مراقبة
+  for(const [x,z,rot] of [[-13.5,14.4,.4],[13.5,14.4,-.4],[13.5,-10.8,-2.6]]){
+    const cam=new THREE.Group();
+    const body=new THREE.Mesh(new THREE.BoxGeometry(.38,.24,.55),mat(0xf3f4f6,.45,.1));cam.add(body);
+    const lens=new THREE.Mesh(new THREE.CylinderGeometry(.08,.08,.12,12),mat(0x111827,.3,.35));
+    lens.rotation.x=Math.PI/2;lens.position.z=.33;cam.add(lens);
+    cam.position.set(x,4.55,z);cam.rotation.y=rot;detailGroup.add(cam);
+  }
+
+  // سجاد مدخل
+  const rug=new THREE.Mesh(new THREE.PlaneGeometry(4.5,2.2),new THREE.MeshStandardMaterial({color:0x5b4636,roughness:.95}));
+  rug.rotation.x=-Math.PI/2;rug.position.set(0,.025,13.8);restaurantGroup.add(rug);
+
   // نقاط التفاعل - الأسماء مخفية حتى الاقتراب
   addStation("meat","🥩 ثلاجة اللحم",new THREE.Vector3(-12,0,-7.9),0xf59e0b);
   addStation("veg","🥬 الخضار",new THREE.Vector3(-8,0,-3.7),0x22c55e);
@@ -755,7 +1170,9 @@ function buildRestaurant(){
   addStation("chop","🔪 التقطيع",new THREE.Vector3(-3,0,-3.7),0x60a5fa);
   addStation("grill","🔥 الشواية",new THREE.Vector3(3,0,-3.7),0xef4444);
   addStation("pot","♨️ القدر",new THREE.Vector3(7.3,0,-3.7),0x38bdf8);
-  addStation("serve","🍽️ منطقة الاستلام",new THREE.Vector3(0,0,.05),0xfbbf24);
+  addStation("oven","🔥 الفرن",new THREE.Vector3(10.1,0,-7.8),0xf97316);
+  addStation("serve","🍽️ منطقة الاستلام",new THREE.Vector3(0,0,-3.05),0xfbbf24);
+  addStation("cctv","📹 غرفة المراقبة",new THREE.Vector3(-13.0,0,5.45),0x22d3ee);
   addStation("cashier","💳 الكاشير",new THREE.Vector3(9,0,3.1),0x60a5fa);
   addStation("trash","🗑️ الحاوية",new THREE.Vector3(12.0,0,-7.2),0x94a3b8);
 
@@ -885,6 +1302,17 @@ function updateHeldSprite(mesh,item){
   s.position.set(0,2.55,.45);s.scale.set(2.45,.62,1);mesh.add(s);mesh.userData.heldSprite=s;
 }
 
+function setOwnMeshFirstPerson(hidden){
+  const own=me?playerMeshes.get(me.id):null;
+  if(!own)return;
+  own.traverse(o=>{
+    if(o.material){
+      o.userData._baseVisible ??= o.visible;
+    }
+  });
+  // نخفي المجسم كاملًا في منظور العين حتى لا تدخل الكاميرا داخل الرأس.
+  own.visible=!hidden;
+}
 function updatePlayerMeshes(dt){
   const fresh=freshPlayers(),ids=new Set(fresh.map(p=>p.id));
   for(const [id,m] of playerMeshes){if(!ids.has(id)){playersGroup.remove(m);playerMeshes.delete(id)}}
@@ -895,7 +1323,10 @@ function updatePlayerMeshes(dt){
     const dx=tx-m.position.x,dz=tz-m.position.z;
     const moving=Math.hypot(dx,dz)>.03;
 
-    if(p.id===me?.id){m.position.x=tx;m.position.z=tz}
+    if(p.id===me?.id){
+      m.position.x=tx;m.position.z=tz;
+      m.visible=cameraMode!=="first";
+    }
     else{
       const interp=1-Math.exp(-10*dt);
       m.position.x=THREE.MathUtils.lerp(m.position.x,tx,interp);
@@ -926,11 +1357,30 @@ function updatePlayerMeshes(dt){
   }
 }
 
+async function tickFinishedCustomers(t){
+  if(!isHost()||!room||t-lastCustomerServerTick<1000)return;
+  lastCustomerServerTick=t;
+
+  const {data,error}=await sb.rpc("restaurant_finish_due_eating",{p_room:room.id});
+  if(error){
+    console.warn("customer tick",error.message);
+    return;
+  }
+
+  if(Number(data)>0){
+    // تحديث بيانات الغرفة بعد الدفع والـ XP والنظافة.
+    const {data:freshRoom}=await sb.from("restaurant_rooms").select("*").eq("id",room.id).maybeSingle();
+    if(freshRoom){
+      room={...room,...freshRoom};
+      updateRoomHUD();
+    }
+  }
+}
 function updateCustomers(t,dt){
-  const active=[...orders.values()].filter(o=>["queued","waiting","ready"].includes(o.status));
+  const active=[...orders.values()].filter(o=>["queued","waiting","ready","eating"].includes(o.status));
   const queued=active.filter(o=>o.status==="queued").sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
   const byTable=new Map(active.map(o=>[o.table_no,o]));
-  const pickupPos=new THREE.Vector3(0,0,.35);
+  const pickupPos=new THREE.Vector3(0,0,.30);
   const exitPos=new THREE.Vector3(0,0,17.4);
 
   for(const [no,c] of customerByTable){
@@ -954,31 +1404,56 @@ function updateCustomers(t,dt){
     if(order.status==="queued"){
       const qi=Math.max(0,queued.findIndex(x=>x.id===order.id));
       target=new THREE.Vector3(9,0,4.3+qi*1.5);
-      const desired=complained?`وين الكاشير؟! 😡`:`${order.customer_name||"زبون"}: ${DISH_LABEL[order.item]}`;
-      setCustomerBubble(c,desired,complained?"#fecaca":"#ffffff",complained?"rgba(90,20,20,.94)":"rgba(38,27,16,.94)");
+      setCustomerBubble(c,complained?"وين الكاشير؟! 😡":`${order.customer_name||"زبون"}: ${DISH_LABEL[order.item]}`,complained?"#fecaca":"#ffffff",complained?"rgba(90,20,20,.94)":"rgba(38,27,16,.94)");
     }else if(order.status==="waiting"){
       target=tablePositions[no];
-      const desired=complained?"طلبي تأخر! 😡":"بانتظار الطلب 🍽️";
-      setCustomerBubble(c,desired,complained?"#fecaca":"#fde68a",complained?"rgba(90,20,20,.94)":"rgba(22,34,42,.94)");
-    }else{
+      setCustomerBubble(c,complained?"طلبي تأخر! 😡":"بانتظار الطلب 🍽️",complained?"#fecaca":"#fde68a",complained?"rgba(90,20,20,.94)":"rgba(22,34,42,.94)");
+    }else if(order.status==="ready"){
       target=pickupPos;
-      setCustomerBubble(c,"طلبي جاهز! 😋","#bbf7d0","rgba(15,55,34,.94)");
+      setCustomerBubble(c,"طلبي جاهز! جاي آخذه 😋","#bbf7d0","rgba(15,55,34,.94)");
+    }else{
+      target=tablePositions[no];
+      const eatingNow=!!order.eating_started_at;
+      setCustomerBubble(c,eatingNow?"قاعد آكل 😋🍴":"راجع للطاولة بالطلب 🍽️","#ffffff","rgba(24,55,41,.94)");
     }
 
-    moveCustomerToward(c,target,dt,order.status==="ready"?2.7:2.05);
+    moveCustomerToward(c,target,dt,order.status==="ready"?2.75:2.1);
 
-    // حركة غضب إذا تأخر الطلب
     if(complained){
       c.userData.lArm.rotation.z=Math.sin(t*.015)*.65;
       c.userData.rArm.rotation.z=-Math.sin(t*.015)*.65;
       c.position.y+=Math.abs(Math.sin(t*.02))*0.018;
     }
 
-    if(order.status==="ready" && c.position.distanceTo(pickupPos)<.55 && isHost() && !completingOrders.has(order.id)){
-      completeCustomerPickup(order,c);
+    if(order.status==="ready" && c.position.distanceTo(pickupPos)<.52 && isHost() && !completingOrders.has(order.id)){
+      customerTakeOrder(order);
+    }
+
+    if(order.status==="eating" && c.position.distanceTo(tablePositions[no])<.58 && isHost()){
+      if(!order.eating_started_at && !eatingLocks.has("start:"+order.id))startCustomerEating(order);
+      else if(order.eating_started_at){
+        const elapsed=Date.now()-new Date(order.eating_started_at).getTime();
+        if(elapsed>=8000){
+          setCustomerBubble(c,"خلصت تقريبًا... 😋","#ffffff","rgba(24,55,41,.94)");
+        }
+      }
     }
   }
 }
+async function customerTakeOrder(order){
+  completingOrders.add(order.id);
+  const {data,error}=await sb.rpc("restaurant_customer_pickup",{p_order_id:order.id});
+  completingOrders.delete(order.id);
+  if(error||data!==true)return;
+  toast(`${order.customer_name||"الزبون"} أخذ الطلب ورجع للطاولة 🍽️`);
+}
+async function startCustomerEating(order){
+  const key="start:"+order.id;eatingLocks.add(key);
+  const {data,error}=await sb.rpc("restaurant_start_eating",{p_order_id:order.id});
+  eatingLocks.delete(key);
+  if(!error&&data===true)toast(`${order.customer_name||"الزبون"} بدأ يأكل 😋`);
+}
+
 function setCustomerBubble(c,text,color,bg){
   if(c.userData.bubbleText===text)return;
   if(c.userData.bubble)c.remove(c.userData.bubble);
@@ -1001,20 +1476,7 @@ function moveCustomerToward(c,target,dt,speed){
   }
   c.position.y=Math.abs(Math.sin(c.userData.walkT*2))*(moving?.023:.004);
 }
-async function completeCustomerPickup(order,c){
-  completingOrders.add(order.id);
-  const {data,error}=await sb.rpc("complete_restaurant_pickup",{p_order_id:order.id});
-  const r=Array.isArray(data)?data[0]:data;
-  completingOrders.delete(order.id);
-  if(error||!r?.ok)return;
 
-  c.userData.departing=true;
-  setCustomerBubble(c,"شكراً! 👋","#ffffff","rgba(24,55,41,.94)");
-  room={...room,balance:r.balance,xp:r.xp,level:r.level,expansion:r.expansion};
-  updateRoomHUD();
-  toast(`الزبون استلم طلبه • +${r.reward} ريال ⭐`);
-  beep(920,.1,"sine",.05);
-}
 
 function createTrashMesh(item){
   const g=new THREE.Group();
@@ -1056,6 +1518,83 @@ async function monitorPatience(t){
       sb.rpc("mark_restaurant_complaint",{p_order_id:o.id}).finally(()=>complaintLocks.delete(o.id));
     }
   }
+}
+
+function initCctv(){
+  if(cctvRenderer)return;
+  cctvRenderer=new THREE.WebGLRenderer({canvas:cctvCanvas,antialias:true,powerPreference:"low-power"});
+  cctvRenderer.setPixelRatio(1);
+  cctvRenderer.setSize(960,540,false);
+  cctvRenderer.outputColorSpace=THREE.SRGBColorSpace;
+  cctvRenderer.toneMapping=THREE.ACESFilmicToneMapping;
+  cctvRenderer.toneMappingExposure=.95;
+
+  cctvCameras=[
+    {name:"CAM 1",cam:new THREE.PerspectiveCamera(62,16/9,.1,90),pos:[9,5.1,8.5],look:[9,1,1.6]},
+    {name:"CAM 2",cam:new THREE.PerspectiveCamera(62,16/9,.1,90),pos:[0,5.3,14],look:[0,1,6]},
+    {name:"CAM 3",cam:new THREE.PerspectiveCamera(68,16/9,.1,90),pos:[0,5.0,-2.9],look:[0,1,-8]},
+    {name:"CAM 4",cam:new THREE.PerspectiveCamera(62,16/9,.1,90),pos:[-10,5.1,14],look:[0,1,14]}
+  ];
+  for(const c of cctvCameras){c.cam.position.set(...c.pos);c.cam.lookAt(...c.look)}
+}
+function openCctv(){
+  initCctv();cctvOpen=true;cctvOverlay.classList.remove("hidden");keys.clear();velX=0;velZ=0;
+}
+function closeCctv(){cctvOpen=false;cctvOverlay.classList.add("hidden")}
+function renderCctv(){
+  if(!cctvOpen||!cctvRenderer)return;
+  const w=960,h=540,halfW=w/2,halfH=h/2;
+  cctvRenderer.setScissorTest(true);
+  cctvRenderer.setClearColor(0x05080b,1);
+  const rects=[[0,halfH,halfW,halfH],[halfW,halfH,halfW,halfH],[0,0,halfW,halfH],[halfW,0,halfW,halfH]];
+  for(let i=0;i<4;i++){
+    const [x,y,rw,rh]=rects[i],cam=cctvCameras[i].cam;
+    cam.aspect=rw/rh;cam.updateProjectionMatrix();
+    cctvRenderer.setViewport(x,y,rw,rh);cctvRenderer.setScissor(x,y,rw,rh);
+    cctvRenderer.render(scene,cam);
+  }
+  cctvRenderer.setScissorTest(false);
+}
+
+function applianceConfig(kind){
+  if(kind==="pot")return {title:"♨️ لوحة القدر",need:"dry_pasta",out:"pasta",temps:[90,100,110],defaultTemp:100,time:3000,note:"ضع المكرونة الجافة ثم شغّل القدر."};
+  if(kind==="oven")return {title:"🔥 لوحة الفرن",need:"raw_meat",out:"burger",temps:[160,180,220],defaultTemp:180,time:3400,note:"يمكنك طهي اللحم في الفرن. 180° مناسب للبرجر."};
+  return {title:"🔥 لوحة الشواية",need:"raw_meat",out:"burger",temps:[160,180,220],defaultTemp:180,time:2600,note:"ضع اللحم على الشواية واضبط الحرارة ثم ابدأ."};
+}
+function openAppliance(kind){
+  const cfg=applianceConfig(kind);
+  if(me?.held_item!==cfg.need)return toast(kind==="pot"?"تحتاج مكرونة جافة":"تحتاج لحمًا نيئًا");
+  applianceKind=kind;appliancePower=false;applianceTemp=cfg.defaultTemp;applianceOpen=true;
+  applianceOverlay.classList.remove("hidden");keys.clear();velX=0;velZ=0;
+  applianceTitle.textContent=cfg.title;applianceNote.textContent=cfg.note;
+  renderAppliance();
+}
+function closeAppliance(){applianceOpen=false;applianceOverlay.classList.add("hidden")}
+function renderAppliance(){
+  const cfg=applianceConfig(applianceKind||"grill");
+  appliancePowerText.textContent=appliancePower?"POWER ON":"POWER OFF";
+  appliancePowerText.style.color=appliancePower?"#86efac":"#fca5a5";
+  applianceTempView.textContent=`${applianceTemp}°C`;
+  applianceStatusText.textContent=appliancePower?"جاهز للبدء":"شغّل الجهاز أولاً";
+  document.querySelectorAll(".tempBtn").forEach((b,i)=>{
+    const val=cfg.temps[i]??Number(b.dataset.temp);
+    b.dataset.temp=String(val);b.textContent=val+"°";b.classList.toggle("active",val===applianceTemp);
+  });
+}
+function startApplianceCooking(){
+  if(!appliancePower)return toast("شغّل الجهاز أولاً");
+  const cfg=applianceConfig(applianceKind);
+  if(me?.held_item!==cfg.need){closeAppliance();return toast("المكوّن غير موجود معك")}
+
+  const ideal=applianceKind==="pot"?100:180;
+  const penalty=Math.abs(applianceTemp-ideal)>35?900:0;
+  const label=applianceKind==="pot"?"♨️ طبخ الباستا...":applianceKind==="oven"?"🔥 الطهي داخل الفرن...":"🔥 الشوي...";
+  closeAppliance();
+  startJob(label,cfg.time+penalty,()=>{
+    setHeld(cfg.out);
+    toast(cfg.out==="burger"?"البرجر جاهز 🍔":"الباستا جاهزة 🍝");
+    beep(760,.09,"sine",.045);
+  });
 }
 
 /* ----------------- Networking ----------------- */
@@ -1130,7 +1669,7 @@ async function subscribe(){
   const {data:ps}=await sb.from("restaurant_players").select("*").eq("room_id",room.id);
   (ps||[]).forEach(p=>players.set(p.id,p));
 
-  const {data:os}=await sb.from("restaurant_orders").select("*").eq("room_id",room.id).in("status",["queued","waiting","ready"]).order("created_at");
+  const {data:os}=await sb.from("restaurant_orders").select("*").eq("room_id",room.id).in("status",["queued","waiting","ready","eating"]).order("created_at");
   (os||[]).forEach(o=>orders.set(o.id,o));
 
   const {data:inv}=await sb.from("restaurant_inventory").select("*").eq("room_id",room.id).maybeSingle();
@@ -1175,8 +1714,19 @@ async function subscribe(){
   orderChannel=sb.channel("restaurant-orders-"+room.id)
     .on("postgres_changes",{event:"*",schema:"public",table:"restaurant_orders",filter:`room_id=eq.${room.id}`},p=>{
       if(p.eventType==="DELETE")orders.delete(p.old.id);
-      else if(["queued","waiting","ready"].includes(p.new.status))orders.set(p.new.id,p.new);
-      else orders.delete(p.new.id);
+      else if(["queued","waiting","ready","eating"].includes(p.new.status)){
+        orders.set(p.new.id,p.new);
+      }else{
+        if(p.old?.status==="eating" && p.new?.status==="served"){
+          const customer=customerByTable.get(Number(p.old.table_no));
+          if(customer){
+            customer.userData.departing=true;
+            setCustomerBubble(customer,"شبعت، يعطيكم العافية 👋","#ffffff","rgba(24,55,41,.94)");
+          }
+          toast(`${p.old.customer_name||"الزبون"} خلص أكله وبيطلع 👋`);
+        }
+        orders.delete(p.new?.id||p.old?.id);
+      }
       renderOrders();
       if(p.eventType==="INSERT"){
         toast("دخل زبون جديد وينتظر الكاشير 🧍");
@@ -1319,7 +1869,7 @@ async function takeIngredient(kind,item){
   toast(`أخذت ${ITEM_LABEL[item]}`);
 }
 function renderOrders(){
-  const list=[...orders.values()].filter(o=>["waiting","ready"].includes(o.status)).sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+  const list=[...orders.values()].filter(o=>["waiting","ready","eating"].includes(o.status)).sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
   const queued=[...orders.values()].filter(o=>o.status==="queued").sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
 
   if(!list.length){
@@ -1328,7 +1878,7 @@ function renderOrders(){
     ordersList.innerHTML=list.slice(0,8).map(o=>{
       const age=(Date.now()-new Date(o.created_at).getTime())/1000;
       const cls=o.complained_at?"late":age>35?"warn":"";
-      const state=o.status==="ready"?"✅ جاهز للاستلام":o.complained_at?"😡 متأخر":"👨‍🍳 قيد التحضير";
+      const state=o.status==="ready"?"✅ جاهز للاستلام":o.status==="eating"?"🍴 يأكل ثم يغادر":o.complained_at?"😡 متأخر":"👨‍🍳 قيد التحضير";
       return `<div class="order ${cls}">
         <div class="orderTop"><span class="orderDish">${DISH_LABEL[o.item]}</span><b>طاولة ${o.table_no}</b></div>
         <div class="orderTime">${state} • ${o.customer_name||"زبون"} • ${Math.floor(age)} ث</div>
@@ -1346,10 +1896,10 @@ function renderOrders(){
 }
 
 async function maybeGenerateOrder(t){
-  if(!isHost()||!room||t-hostOrderTimer<10500)return;
+  if(!isHost()||!room||!room.day_open||t-hostOrderTimer<10500)return;
   hostOrderTimer=t;
 
-  const active=[...orders.values()].filter(o=>["queued","waiting","ready"].includes(o.status));
+  const active=[...orders.values()].filter(o=>["queued","waiting","ready","eating"].includes(o.status));
   const maxOrders=4+(room?.expansion||1)*2;
   if(active.length>=maxOrders)return;
 
@@ -1374,9 +1924,12 @@ function updateTaskText(){
   let text="خذ مكوّنًا من المطبخ ثم أكمل الوصفة.";
 
   const queued=[...orders.values()].filter(o=>o.status==="queued");
-  const kitchen=[...orders.values()].filter(o=>["waiting","ready"].includes(o.status));
+  const kitchen=[...orders.values()].filter(o=>["waiting","ready","eating"].includes(o.status));
 
-  if(me?.role==="cashier"){
+  if(!room?.day_open && !orders.size){
+    title="🔒 المطعم مغلق";
+    text=isHost()?"اضغط «فتح اليوم» من الأعلى لبدء استقبال الزبائن.":"بانتظار صاحب المطعم لفتح اليوم.";
+  }else if(me?.role==="cashier"){
     title=queued.length?"💳 هناك زبائن عند الكاشير":"💳 أنت مسؤول الكاشير";
     text=queued.length?"ابقَ عند جهاز الكاشير واستلم الطلب التالي بالضغط على E.":"ابقَ قريبًا من الكاشير لاستقبال الزبائن القادمين.";
   }else if(queued.length&&!freshPlayers().some(p=>p.role==="cashier")){
@@ -1391,7 +1944,7 @@ function updateTaskText(){
   }else if(held==="raw_meat"){title="🥩 اللحم يحتاج طبخ";text="اذهب إلى الشواية واضغط E."}
   else if(held==="vegetables"){title="🥬 الخضار تحتاج تقطيع";text="اذهب إلى لوح التقطيع واضغط E."}
   else if(held==="dry_pasta"){title="🍝 المكرونة تحتاج طبخ";text="اذهب إلى القدر واضغط E."}
-  else if(["burger","salad","pasta"].includes(held)){title=`${DISH_LABEL[held]} جاهز للتقديم`;text="اذهب إلى جرس التقديم لتسليم الطلب المطابق."}
+  else if(["burger","salad","pasta"].includes(held)){title=`${DISH_LABEL[held]} جاهز`;text="اذهب إلى منطقة الاستلام وضع الطبق هناك. بعدها سيأتي الزبون ليستلمه."}
 
   taskBox.innerHTML=`<strong>${title}</strong><span>${text}</span>`;
 }
@@ -1402,10 +1955,12 @@ function stationActionText(s){
   if(s.kind==="meat")return held?"يداك مشغولتان":"خذ لحمًا نيئًا";
   if(s.kind==="veg")return held?"يداك مشغولتان":"خذ خضارًا";
   if(s.kind==="pastaBox")return held?"يداك مشغولتان":"خذ مكرونة جافة";
-  if(s.kind==="grill")return held==="raw_meat"?"اشوِ اللحم وحوّله إلى برجر":"تحتاج لحمًا نيئًا";
+  if(s.kind==="grill")return held==="raw_meat"?"افتح لوحة الشواية واضبط الحرارة":"تحتاج لحمًا نيئًا";
+  if(s.kind==="oven")return held==="raw_meat"?"افتح لوحة الفرن واضبط الحرارة":"يمكن استخدام الفرن لطهي اللحم";
   if(s.kind==="chop")return held==="vegetables"?"قطّع الخضار للسلطة":"تحتاج خضارًا";
-  if(s.kind==="pot")return held==="dry_pasta"?"اطبخ المكرونة":"تحتاج مكرونة جافة";
-  if(s.kind==="serve")return ["burger","salad","pasta"].includes(held)?"قدّم الطبق للطلب المطابق":"احمل طبقًا جاهزًا أولًا";
+  if(s.kind==="pot")return held==="dry_pasta"?"افتح لوحة القدر وابدأ الطبخ":"تحتاج مكرونة جافة";
+  if(s.kind==="cctv")return "افتح شاشة كاميرات المطعم";
+  if(s.kind==="serve")return ["burger","salad","pasta"].includes(held)?"ضع الطبق على رف الاستلام من جهة المطبخ":"احمل طبقًا جاهزًا أولًا";
   if(s.kind==="cashier"){
     const q=[...orders.values()].filter(o=>o.status==="queued").length;
     if(me?.role==="cashier")return q?`افتح اللابتوب — ${q} زبون ينتظر`:"افتح لابتوب الكاشير";
@@ -1493,7 +2048,11 @@ async function interact(){
   }
   if(k==="grill"){
     if(h!=="raw_meat")return toast("تحتاج لحمًا نيئًا");
-    startJob("🔥 شوي البرجر...",2600,()=>{setHeld("burger");toast("البرجر جاهز 🍔")});return;
+    openAppliance("grill");return;
+  }
+  if(k==="oven"){
+    if(h!=="raw_meat")return toast("تحتاج لحمًا نيئًا");
+    openAppliance("oven");return;
   }
   if(k==="chop"){
     if(h!=="vegetables")return toast("تحتاج خضارًا");
@@ -1501,8 +2060,9 @@ async function interact(){
   }
   if(k==="pot"){
     if(h!=="dry_pasta")return toast("تحتاج مكرونة جافة");
-    startJob("♨️ طبخ الباستا...",2800,()=>{setHeld("pasta");toast("الباستا جاهزة 🍝")});return;
+    openAppliance("pot");return;
   }
+  if(k==="cctv"){openCctv();return;}
   if(k==="cashier"){
     if(me.role!=="cashier"){
       const {data,error}=await sb.rpc("claim_cashier_role",{p_room:room.id});
@@ -1525,12 +2085,32 @@ async function interact(){
     if(!match)return toast("لا يوجد طلب لهذا الطبق الآن");
 
     startJob("🍽️ وضع الطلب في منطقة الاستلام...",900,async()=>{
-      const {data,error}=await sb.rpc("serve_restaurant_order",{p_order_id:match.id,p_item:h});
-      const result=Array.isArray(data)?data[0]:data;
-      if(error||!result?.ok){toast("تعذر تجهيز الطلب للاستلام");return}
+      const readyAt=new Date().toISOString();
+      const {data,error}=await sb
+        .from("restaurant_orders")
+        .update({status:"ready",ready_at:readyAt})
+        .eq("id",match.id)
+        .eq("room_id",room.id)
+        .eq("status","waiting")
+        .eq("item",h)
+        .select("id,status,item,table_no,ready_at")
+        .maybeSingle();
+
+      if(error){
+        console.error("handoff error",error);
+        toast("تعذر التسليم: "+(error.message||"خطأ غير معروف"));
+        return;
+      }
+      if(!data){
+        toast("الطلب تغير أو استلمه لاعب آخر");
+        return;
+      }
+
+      orders.set(data.id,{...match,...data});
       setHeld(null);
-      toast("الطلب جاهز — الزبون جاي يستلمه 🍽️");
-      beep(880,.1,"sine",.05)
+      renderOrders();
+      toast(`تم وضع ${DISH_LABEL[h]} في الاستلام — الزبون جاي يأخذه 🍽️`);
+      beep(880,.1,"sine",.05);
     });
   }
 }
@@ -1552,7 +2132,7 @@ function collides(x,z){
 }
 
 function move(dt){
-  if(!me||!laptopOverlay.classList.contains("hidden"))return false;
+  if(!me||!laptopOverlay.classList.contains("hidden")||cctvOpen||applianceOpen||!dayReportOverlay.classList.contains("hidden")||!settingsOverlay.classList.contains("hidden"))return false;
 
   let sx=0,sz=0;
   if(!actionJob){
@@ -1560,19 +2140,24 @@ function move(dt){
     if(keys.has("ArrowDown")||keys.has("s"))sz+=1;
     if(keys.has("ArrowLeft")||keys.has("a"))sx-=1;
     if(keys.has("ArrowRight")||keys.has("d"))sx+=1;
+
+    // عصا الجوال: X يمين/يسار و Y للأمام/الخلف.
+    sx+=joystickX;
+    sz+=joystickY;
   }
 
   let targetX=0,targetZ=0;
-  if(sx||sz){
-    const len=Math.hypot(sx,sz);sx/=len;sz/=len;
+  if(Math.abs(sx)>.02||Math.abs(sz)>.02){
+    const len=Math.max(1,Math.hypot(sx,sz));sx/=len;sz/=len;
     const cos=Math.cos(camYaw),sin=Math.sin(camYaw);
     const dx=sx*cos+sz*sin,dz=-sx*sin+sz*cos;
-    const maxSpeed=4.65;
+    const sprint=runHeld||keys.has("Shift");
+    const maxSpeed=sprint?7.2:4.65;
     targetX=dx*maxSpeed;targetZ=dz*maxSpeed;
   }
 
-  // تسارع وتباطؤ تدريجيان بدل الانتقال الفوري للسرعة.
-  const response=(sx||sz)?12:9;
+  const movingInput=Math.abs(sx)>.02||Math.abs(sz)>.02;
+  const response=movingInput?13:10;
   const blend=1-Math.exp(-response*dt);
   velX=THREE.MathUtils.lerp(velX,targetX,blend);
   velZ=THREE.MathUtils.lerp(velZ,targetZ,blend);
@@ -1598,6 +2183,23 @@ async function syncPlayer(force=false){
 
 function updateCamera(dt){
   if(!me)return;
+
+  if(cameraMode==="first"){
+    const eyeY=2.34;
+    const forward=new THREE.Vector3(
+      -Math.sin(camYaw)*Math.cos(camPitch),
+      -Math.sin(camPitch),
+      -Math.cos(camYaw)*Math.cos(camPitch)
+    );
+    camera.position.set(me.x,eyeY,me.z);
+    camera.lookAt(camera.position.clone().add(forward));
+    camera.fov=72;
+    camera.updateProjectionMatrix();
+    return;
+  }
+
+  camera.fov=58;
+  camera.updateProjectionMatrix();
   const horizontal=Math.cos(camPitch)*camDist;
   const height=Math.sin(camPitch)*camDist;
   const desired=new THREE.Vector3(
@@ -1619,15 +2221,102 @@ function installCameraControls(){
   c.addEventListener("pointermove",e=>{
     if(!dragging||e.pointerId!==pointerId)return;
     const dx=e.clientX-lastPX,dy=e.clientY-lastPY;lastPX=e.clientX;lastPY=e.clientY;
-    camYaw-=dx*.006;camPitch=clamp(camPitch-dy*.0045,.22,1.02);
+    camYaw-=dx*(cameraMode==="first"?.0048:.006)*cameraSensitivity;
+    if(cameraMode==="first")camPitch=clamp(camPitch+dy*.0037*cameraSensitivity,-1.12,1.12);
+    else camPitch=clamp(camPitch-dy*.0045*cameraSensitivity,.22,1.02);
   });
   const stop=e=>{if(e.pointerId!==pointerId)return;dragging=false;pointerId=null;try{c.releasePointerCapture(e.pointerId)}catch{}};
   c.addEventListener("pointerup",stop);c.addEventListener("pointercancel",stop);
-  c.addEventListener("wheel",e=>{e.preventDefault();camDist=clamp(camDist+e.deltaY*.01,6.5,18)},{passive:false});
+  c.addEventListener("wheel",e=>{
+    e.preventDefault();
+    if(cameraMode==="third")camDist=clamp(camDist+e.deltaY*.01,6.5,18)
+  },{passive:false});
 }
 
-function resetCamera(){camYaw=0;camPitch=.47;camDist=10.5;toast("تم إرجاع الكاميرا 🎥")}
+function setCameraMode(mode){
+  cameraMode=mode;
+  if(mode==="first"){
+    camPitch=0;
+    crosshair.classList.remove("hidden");
+    fpHint.classList.remove("hidden");
+    $("#cameraModeBtn").textContent="🎥 منظور ثالث";
+    setOwnMeshFirstPerson(true);
+    toast("منظور من عيون اللاعب 👁️");
+  }else{
+    camPitch=.47;camDist=10.5;
+    crosshair.classList.add("hidden");
+    fpHint.classList.add("hidden");
+    $("#cameraModeBtn").textContent="👁️ منظور أول";
+    setOwnMeshFirstPerson(false);
+    toast("منظور ثالث 🎥");
+  }
+}
+function toggleCameraMode(){setCameraMode(cameraMode==="first"?"third":"first")}
+function resetCamera(){
+  camYaw=0;camPitch=cameraMode==="first"?0:.47;camDist=10.5;
+  toast("تم إرجاع الكاميرا 🎥")
+}
 
+function updateShiftClock(t){
+  const start=room?.day_open&&room?.day_started_at?new Date(room.day_started_at).getTime():shiftStartedAt;
+  const elapsed=(Date.now()-start)/1000;
+  const gameMinutes=(8*60 + elapsed*1.8)%(24*60);
+  const hh=Math.floor(gameMinutes/60),mm=Math.floor(gameMinutes%60);
+  clockView.textContent=`${String(hh).padStart(2,"0")}:${String(mm).padStart(2,"0")}`;
+
+  let phase="نهار",sky=0x9eb6c3,exposure=1.08;
+  if(hh<7){phase="فجر";sky=0x6f7f97;exposure=.88}
+  else if(hh<12){phase="صباح";sky=0xa9c4d1;exposure=1.08}
+  else if(hh<17){phase="ظهر";sky=0xb8d2dc;exposure=1.12}
+  else if(hh<20){phase="مساء";sky=0x9a7f78;exposure=.95}
+  else{phase="ليل";sky=0x182431;exposure=.78}
+  dayPhaseView.textContent=phase;
+  scene.background.setHex(sky);scene.fog.color.setHex(sky);
+  renderer.toneMappingExposure=THREE.MathUtils.lerp(renderer.toneMappingExposure,exposure,.03);
+}
+async function toggleDay(){
+  if(!isHost()||!room)return;
+
+  if(!room.day_open){
+    const {data,error}=await sb.rpc("restaurant_open_day",{p_room:room.id});
+    const r=Array.isArray(data)?data[0]:data;
+    if(error||!r?.ok)return toast("تعذر فتح اليوم");
+    room.day_open=true;
+    room.day_started_at=r.started_at;
+    room.day_number=r.day_number;
+    shiftStartedAt=Date.now();
+    updateRoomHUD();
+    updateTaskText();
+    toast(`تم فتح اليوم ${r.day_number} 🚪`);
+    beep(720,.09,"sine",.05);
+    return;
+  }
+
+  const active=[...orders.values()].filter(o=>["queued","waiting","ready","eating"].includes(o.status));
+  if(active.length){
+    return toast(`لا يمكن إغلاق اليوم: بقي ${active.length} زبون/طلب نشط`);
+  }
+
+  const {data,error}=await sb.rpc("restaurant_close_day",{p_room:room.id});
+  const r=Array.isArray(data)?data[0]:data;
+  if(error||!r?.ok)return toast("تعذر إغلاق اليوم");
+
+  room.day_open=false;
+  room.day_closed_at=new Date().toISOString();
+  room.day_number=(r.day_number||room.day_number)+1;
+  updateRoomHUD();
+  updateTaskText();
+
+  $("#dayReportTitle").textContent=`تقرير اليوم ${r.day_number}`;
+  $("#daySalesView").textContent=`${r.sales} ريال`;
+  $("#dayXpGainView").textContent=r.xp_gained;
+  $("#dayRepReportView").textContent=`${r.reputation}%`;
+  $("#dayCleanReportView").textContent=`${r.cleanliness}%`;
+  dayReportOverlay.classList.remove("hidden");
+  toast("تم إغلاق اليوم 🔒");
+  beep(430,.13,"sine",.045);
+}
+function closeDayReport(){dayReportOverlay.classList.add("hidden")}
 async function leave(){
   running=false;if(heartbeat)clearInterval(heartbeat);
   try{
@@ -1642,7 +2331,7 @@ async function leave(){
   playerMeshes.clear();players.clear();orders.clear();trashItems.clear();
   for(const [,m] of trashMeshes)trashGroup.remove(m);trashMeshes.clear();
   room=null;me=null;nearestStation=null;actionJob=null;velX=0;velZ=0;
-  closeLaptop();
+  closeLaptop();closeCctv();closeAppliance();closeDayReport();
   game.classList.add("hidden");lobby.classList.remove("hidden");lock(false);
 }
 
@@ -1658,51 +2347,126 @@ function loop(t){
   tickJob(t);
   maybeGenerateOrder(t);
   monitorPatience(t);
+  tickFinishedCustomers(t);
   updatePlayerMeshes(dt);
   updateCustomers(t,dt);
   updateKitchenDoor(dt);
+  updateShiftClock(t);
   updateCamera(dt);
 
   // subtle restaurant life
   for(const s of stations)s.ring.rotation.z+=dt*.16;
 
   renderer.render(scene,camera);
+  renderCctv();
+  updateFps(t);
 
   if(Math.floor(t/1000)!==Math.floor((t-dt*1000)/1000))renderOrders();
 }
+
+function updateJoystick(clientX,clientY){
+  const r=joystick.getBoundingClientRect();
+  const cx=r.left+r.width/2,cy=r.top+r.height/2;
+  let dx=clientX-cx,dy=clientY-cy;
+  const max=r.width*.34,dist=Math.hypot(dx,dy);
+  if(dist>max){dx=dx/dist*max;dy=dy/dist*max}
+  joystickKnob.style.transform=`translate(calc(-50% + ${dx}px),calc(-50% + ${dy}px))`;
+  joystickX=clamp(dx/max,-1,1);
+  joystickY=clamp(dy/max,-1,1);
+}
+function resetJoystick(){
+  joystickX=0;joystickY=0;joystickPointer=null;
+  joystickKnob.style.transform="translate(-50%,-50%)";
+}
+function installJoystick(){
+  joystick.addEventListener("pointerdown",e=>{
+    e.preventDefault();joystickPointer=e.pointerId;
+    try{joystick.setPointerCapture(e.pointerId)}catch{}
+    updateJoystick(e.clientX,e.clientY);
+  });
+  joystick.addEventListener("pointermove",e=>{
+    if(e.pointerId!==joystickPointer)return;
+    e.preventDefault();updateJoystick(e.clientX,e.clientY);
+  });
+  const end=e=>{
+    if(e.pointerId!==joystickPointer)return;
+    e.preventDefault();resetJoystick();
+  };
+  joystick.addEventListener("pointerup",end);
+  joystick.addEventListener("pointercancel",end);
+}
+installJoystick();
 
 /* ----------------- Inputs ----------------- */
 $("#createBtn").onclick=createRoom;
 $("#joinBtn").onclick=joinRoom;
 $("#exitBtn").onclick=leave;
-$("#actionBtn").onclick=interact;
+$("#dayToggleBtn").onclick=toggleDay;
+$("#closeDayReportBtn").onclick=closeDayReport;
+$("#mobileActionBtn").onclick=interact;
+$("#mobileViewBtn").onclick=toggleCameraMode;
+$("#mobileRunBtn").addEventListener("pointerdown",e=>{e.preventDefault();runHeld=true});
+$("#mobileRunBtn").addEventListener("pointerup",e=>{e.preventDefault();runHeld=false});
+$("#mobileRunBtn").addEventListener("pointercancel",()=>runHeld=false);
+$("#mobileRunBtn").addEventListener("pointerleave",()=>runHeld=false);
+$("#cameraModeBtn").onclick=toggleCameraMode;
+$("#settingsBtn").onclick=openSettings;
+$("#fullscreenBtn").onclick=toggleFullscreen;
+$("#closeSettingsBtn").onclick=closeSettings;
+$("#resetSettingsBtn").onclick=()=>{
+  graphicsQuality="medium";cameraSensitivity=1;uiScale=1;
+  sensitivityRange.value="100";uiScaleRange.value="100";
+  $("#sensitivityLabel").textContent="100%";$("#uiScaleLabel").textContent="100%";
+  applyGraphicsQuality("medium");applyUiScale(1);
+  localStorage.setItem("rt_sens","1");
+  toast("تمت إعادة الإعدادات");
+};
+qualitySelect.onchange=()=>applyGraphicsQuality(qualitySelect.value);
+sensitivityRange.oninput=()=>{
+  cameraSensitivity=Number(sensitivityRange.value)/100;
+  $("#sensitivityLabel").textContent=sensitivityRange.value+"%";
+  localStorage.setItem("rt_sens",String(cameraSensitivity));
+};
+uiScaleRange.oninput=()=>applyUiScale(Number(uiScaleRange.value)/100);
 $("#closeLaptopBtn").onclick=closeLaptop;
+$("#closeCctvBtn").onclick=closeCctv;
+$("#closeApplianceBtn").onclick=closeAppliance;
+$("#applianceCancelBtn").onclick=closeAppliance;
+$("#appliancePowerBtn").onclick=()=>{appliancePower=!appliancePower;renderAppliance()};
+$("#applianceStartBtn").onclick=startApplianceCooking;
+document.querySelectorAll(".tempBtn").forEach(b=>b.onclick=()=>{applianceTemp=Number(b.dataset.temp);renderAppliance()});
 document.querySelectorAll(".laptopTab").forEach(b=>b.onclick=()=>{laptopTab=b.dataset.laptopTab;renderLaptop()});
 $("#resetCamBtn").onclick=resetCamera;
-$("#zoomInBtn").onclick=()=>camDist=clamp(camDist-1.4,6.5,18);
-$("#zoomOutBtn").onclick=()=>camDist=clamp(camDist+1.4,6.5,18);
+$("#zoomInBtn").onclick=()=>{if(cameraMode==="third")camDist=clamp(camDist-1.4,6.5,18)};
+$("#zoomOutBtn").onclick=()=>{if(cameraMode==="third")camDist=clamp(camDist+1.4,6.5,18)};
 
 $("#roomInput").addEventListener("input",e=>e.target.value=e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,6));
 
 addEventListener("keydown",e=>{
   if(["INPUT","TEXTAREA"].includes(document.activeElement?.tagName))return;
   const k=e.key.length===1?e.key.toLowerCase():e.key;
-  if(k==="Escape"&&!laptopOverlay.classList.contains("hidden")){e.preventDefault();closeLaptop();return}
-  if(!laptopOverlay.classList.contains("hidden"))return;
+  if(k==="Escape"){
+    if(!laptopOverlay.classList.contains("hidden")){e.preventDefault();closeLaptop();return}
+    if(cctvOpen){e.preventDefault();closeCctv();return}
+    if(applianceOpen){e.preventDefault();closeAppliance();return}
+    if(!dayReportOverlay.classList.contains("hidden")){e.preventDefault();closeDayReport();return}
+    if(!settingsOverlay.classList.contains("hidden")){e.preventDefault();closeSettings();return}
+  }
+  if(!laptopOverlay.classList.contains("hidden")||cctvOpen||applianceOpen||!settingsOverlay.classList.contains("hidden"))return;
   if(k==="e"){e.preventDefault();interact();return}
   if(k==="r"){e.preventDefault();resetCamera();return}
+  if(k==="v"){e.preventDefault();toggleCameraMode();return}
+  if(k==="f"){e.preventDefault();toggleFullscreen();return}
+  if(k==="Shift"){keys.add("Shift");return}
   if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","w","a","s","d"].includes(k)){e.preventDefault();keys.add(k)}
 });
 addEventListener("keyup",e=>keys.delete(e.key.length===1?e.key.toLowerCase():e.key));
 
-document.querySelectorAll(".ctrl[data-key]").forEach(b=>{
-  const k=b.dataset.key;
-  const on=e=>{e.preventDefault();keys.add(k)},off=e=>{e.preventDefault();keys.delete(k)};
-  b.addEventListener("pointerdown",on);b.addEventListener("pointerup",off);
-  b.addEventListener("pointercancel",off);b.addEventListener("pointerleave",off);
-});
 
-document.addEventListener("visibilitychange",()=>{if(!document.hidden)syncPlayer(true)});
+document.addEventListener("visibilitychange",()=>{
+  if(document.hidden){resetJoystick();runHeld=false;keys.clear()}
+  else syncPlayer(true)
+});
 </script>
 </body>
 </html>
