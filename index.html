@@ -75,6 +75,21 @@ input:focus{border-color:#f59e0b;box-shadow:0 0 0 3px #f59e0b20}
   pointer-events:auto;padding:9px 12px;border-radius:15px;background:#0b1720e8;
   border:1px solid #304958;box-shadow:0 8px 25px #0006;backdrop-filter:blur(10px);font-size:13px
 }
+
+.hudClosable{position:relative}
+.hudClose{
+  position:absolute;top:6px;left:6px;width:24px;height:24px;border:0;border-radius:8px;
+  background:#ffffff12;color:#dbeafe;font-weight:1000;cursor:pointer;display:grid;place-items:center;
+  line-height:1;pointer-events:auto
+}
+.hudClose:hover{background:#ef444433;color:#fecaca}
+.restoreHudBtn{
+  position:absolute;z-index:36;right:12px;bottom:92px;border:1px solid #304958;background:#0b1720df;
+  color:#dbeafe;border-radius:13px;padding:9px 11px;font-weight:900;cursor:pointer;backdrop-filter:blur(8px)
+}
+@media(max-width:760px){
+  .restoreHudBtn{right:12px;bottom:246px;padding:8px 9px;font-size:11px}
+}
 .code{font-weight:900;color:#fbbf24;letter-spacing:2px}
 .money{color:#86efac;font-weight:900}
 .levelPill{color:#fde68a;font-weight:900}
@@ -395,20 +410,29 @@ input:focus{border-color:#f59e0b;box-shadow:0 0 0 3px #f59e0b20}
     </div>
   </div>
 
-  <aside class="orders">
+  <aside id="ordersPanel" class="orders hudClosable">
+    <button class="hudClose" data-close-hud="ordersPanel" type="button">×</button>
     <h3>🧾 طلبات الزبائن</h3>
     <div id="ordersList"><div class="emptyOrders">بانتظار أول طلب...</div></div>
   </aside>
 
-  <div id="taskBox" class="task">
+  <div id="taskBox" class="task hudClosable">
+    <button class="hudClose" data-close-hud="taskBox" type="button">×</button>
     <strong>ابدأ العمل 👨‍🍳</strong>
     <span>اقترب من محطة في المطبخ واضغط E أو زر «استخدم».</span>
   </div>
 
-  <div class="held">ما تحمله الآن:<b id="heldView">لا شيء</b></div>
-  <div class="roleBadge">وظيفتك الحالية:<b id="roleView">طاقم عام</b></div>
+  <div id="heldPanel" class="held hudClosable">
+    <button class="hudClose" data-close-hud="heldPanel" type="button">×</button>
+    ما تحمله الآن:<b id="heldView">لا شيء</b>
+  </div>
+  <div id="rolePanel" class="roleBadge hudClosable">
+    <button class="hudClose" data-close-hud="rolePanel" type="button">×</button>
+    وظيفتك الحالية:<b id="roleView">طاقم عام</b>
+  </div>
 
-  <div class="queueBox">
+  <div id="queuePanel" class="queueBox hudClosable">
+    <button class="hudClose" data-close-hud="queuePanel" type="button">×</button>
     <h3>🧍 طابور الكاشير</h3>
     <div id="queueInfo" class="queueLine">لا يوجد زبائن ينتظرون.</div>
   </div>
@@ -452,7 +476,11 @@ input:focus{border-color:#f59e0b;box-shadow:0 0 0 3px #f59e0b20}
     <button id="settingsBtn" class="camBtn" type="button">⚙️ إعدادات</button>
     <button id="fullscreenBtn" class="camBtn" type="button">⛶ ملء الشاشة</button>
   </div>
-  <div id="perfBadge" class="perfBadge">FPS -- • Auto</div>
+  <div id="perfBadge" class="perfBadge hudClosable">
+    <button class="hudClose" data-close-hud="perfBadge" type="button">×</button>
+    <span id="perfBadgeText">FPS -- • Auto</span>
+  </div>
+  <button id="restoreHudBtn" class="restoreHudBtn hidden" type="button">👁️ إظهار الواجهات</button>
 
   <div class="help">WASD للحركة • Shift للجري • E للتفاعل • V للمنظور • F ملء الشاشة • اسحب للنظر</div>
   <div id="toast" class="toast"></div>
@@ -578,7 +606,7 @@ const levelView=$("#levelView"),xpView=$("#xpView"),repView=$("#repView"),cleanV
 const crosshair=$("#crosshair"),fpHint=$("#fpHint"),clockView=$("#clockView"),dayPhaseView=$("#dayPhaseView");
 const cctvOverlay=$("#cctvOverlay"),cctvCanvas=$("#cctvCanvas"),applianceOverlay=$("#applianceOverlay");
 const dayToggleBtn=$("#dayToggleBtn"),dayStatusView=$("#dayStatusView"),dayNumberView=$("#dayNumberView"),dayReportOverlay=$("#dayReportOverlay");
-const settingsOverlay=$("#settingsOverlay"),qualitySelect=$("#qualitySelect"),sensitivityRange=$("#sensitivityRange"),uiScaleRange=$("#uiScaleRange"),perfBadge=$("#perfBadge");
+const settingsOverlay=$("#settingsOverlay"),qualitySelect=$("#qualitySelect"),sensitivityRange=$("#sensitivityRange"),uiScaleRange=$("#uiScaleRange"),perfBadge=$("#perfBadge"),perfBadgeText=$("#perfBadgeText");
 const joystick=$("#joystick"),joystickKnob=$("#joystickKnob");
 const applianceTitle=$("#applianceTitle"),appliancePowerText=$("#appliancePowerText"),applianceTempView=$("#applianceTempView"),applianceStatusText=$("#applianceStatusText"),applianceNote=$("#applianceNote");
 
@@ -821,7 +849,7 @@ function applyGraphicsQuality(q){
 
   qualitySelect.value=graphicsQuality;
   $("#qualityLabel").textContent=graphicsQuality==="low"?"منخفض":graphicsQuality==="high"?"عالي":"متوسط";
-  perfBadge.textContent=`FPS ${fpsValue||"--"} • ${graphicsQuality==="low"?"Low":graphicsQuality==="high"?"High":"Med"}`;
+  perfBadgeText.textContent=`FPS ${fpsValue||"--"} • ${graphicsQuality==="low"?"Low":graphicsQuality==="high"?"High":"Med"}`;
   localStorage.setItem("rt_quality",graphicsQuality);
 }
 function applyUiScale(v){
@@ -854,7 +882,7 @@ function updateFps(t){
   if(t-fpsLast>=1000){
     fpsValue=Math.round(fpsFrames*1000/(t-fpsLast));
     fpsFrames=0;fpsLast=t;
-    perfBadge.textContent=`FPS ${fpsValue} • ${graphicsQuality==="low"?"Low":graphicsQuality==="high"?"High":"Med"}`;
+    perfBadgeText.textContent=`FPS ${fpsValue} • ${graphicsQuality==="low"?"Low":graphicsQuality==="high"?"High":"Med"}`;
     if(graphicsQuality==="medium" && fpsValue<28 && (matchMedia("(pointer:coarse)").matches||innerWidth<900)){
       applyGraphicsQuality("low");
       toast("تم تخفيف الجرافيكس تلقائيًا للسلاسة ⚡");
@@ -2397,12 +2425,51 @@ function installJoystick(){
 }
 installJoystick();
 
+
+const HUD_PANEL_IDS=["ordersPanel","taskBox","heldPanel","rolePanel","queuePanel","perfBadge"];
+
+function refreshRestoreHudButton(){
+  const hiddenCount=HUD_PANEL_IDS.filter(id=>document.getElementById(id)?.classList.contains("hidden")).length;
+  $("#restoreHudBtn").classList.toggle("hidden",hiddenCount===0);
+}
+function hideHudPanel(id){
+  const el=document.getElementById(id);
+  if(!el)return;
+  el.classList.add("hidden");
+  localStorage.setItem("rt_hud_"+id,"hidden");
+  refreshRestoreHudButton();
+}
+function restoreHudPanels(){
+  for(const id of HUD_PANEL_IDS){
+    document.getElementById(id)?.classList.remove("hidden");
+    localStorage.removeItem("rt_hud_"+id);
+  }
+  refreshRestoreHudButton();
+}
+function loadHudPreferences(){
+  for(const id of HUD_PANEL_IDS){
+    if(localStorage.getItem("rt_hud_"+id)==="hidden"){
+      document.getElementById(id)?.classList.add("hidden");
+    }
+  }
+  refreshRestoreHudButton();
+}
+
 /* ----------------- Inputs ----------------- */
 $("#createBtn").onclick=createRoom;
 $("#joinBtn").onclick=joinRoom;
 $("#exitBtn").onclick=leave;
 $("#dayToggleBtn").onclick=toggleDay;
 $("#closeDayReportBtn").onclick=closeDayReport;
+document.querySelectorAll("[data-close-hud]").forEach(b=>{
+  b.onclick=e=>{
+    e.stopPropagation();
+    hideHudPanel(b.dataset.closeHud);
+  };
+});
+$("#restoreHudBtn").onclick=restoreHudPanels;
+loadHudPreferences();
+
 $("#mobileActionBtn").onclick=interact;
 $("#mobileViewBtn").onclick=toggleCameraMode;
 $("#mobileRunBtn").addEventListener("pointerdown",e=>{e.preventDefault();runHeld=true});
