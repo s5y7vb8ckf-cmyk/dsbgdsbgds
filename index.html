@@ -1,0 +1,1708 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#111827">
+<title>Restaurant Together 3D | Realistic Expansion</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.186.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.186.0/examples/jsm/"
+  }
+}
+</script>
+
+<style>
+:root{
+  --bg:#071018;--panel:#0d1822e8;--panel2:#132430;--line:#294556;
+  --text:#f8fafc;--muted:#a9bdc9;--green:#22c55e;--amber:#f59e0b;
+  --red:#ef4444;--blue:#38bdf8
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;overflow:hidden;font-family:Tahoma,Arial,sans-serif;background:#05090e;color:var(--text)}
+button,input{font:inherit}.hidden{display:none!important}
+
+/* ---------- LOBBY ---------- */
+.screen{
+  position:fixed;inset:0;display:grid;place-items:center;padding:20px;
+  background:
+    radial-gradient(circle at 15% 0,#7c2d1244 0,transparent 35%),
+    radial-gradient(circle at 90% 20%,#164e6344 0,transparent 36%),
+    linear-gradient(160deg,#111827,#060a0f)
+}
+.card{
+  width:min(650px,100%);padding:30px;border-radius:30px;
+  background:linear-gradient(180deg,#121d27f5,#09121af3);
+  border:1px solid #334b5a;box-shadow:0 35px 110px #000b;backdrop-filter:blur(18px)
+}
+.logo{
+  width:88px;height:88px;margin:auto;border-radius:27px;display:grid;place-items:center;font-size:43px;
+  background:linear-gradient(145deg,#f59e0b,#b45309);box-shadow:0 18px 50px #d9770640
+}
+h1{text-align:center;margin:16px 0 7px;font-size:34px}
+.sub{text-align:center;color:var(--muted);line-height:1.9;margin-bottom:18px}
+.features{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:18px 0}
+.feature{padding:13px;border-radius:15px;background:#13232f;border:1px solid #294555;text-align:center}
+.feature b{display:block;margin-bottom:5px;font-size:13px}.feature span{font-size:11px;color:#a8bfcc;line-height:1.6}
+.field{margin:12px 0}.field label{display:block;margin:0 5px 8px;color:#dce9ef;font-size:14px}
+input{
+  width:100%;padding:15px 16px;border-radius:15px;border:1px solid #314c5d;
+  background:#08131b;color:#fff;outline:none;font-size:16px
+}
+input:focus{border-color:#f59e0b;box-shadow:0 0 0 3px #f59e0b20}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:15px}
+.btn{border:0;border-radius:15px;padding:15px;font-weight:900;cursor:pointer;color:#fff;background:#1c3342}
+.btn.primary{background:linear-gradient(135deg,#f59e0b,#b45309);box-shadow:0 12px 28px #d9770633}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.msg{height:24px;margin-top:11px;text-align:center;color:#fca5a5;font-size:14px}
+
+/* ---------- GAME ---------- */
+#game{position:fixed;inset:0;background:#020609}
+#world{position:absolute;inset:0}
+#world canvas{display:block;width:100%;height:100%;touch-action:none}
+
+.topbar{
+  position:absolute;z-index:30;top:12px;left:12px;right:12px;display:flex;
+  justify-content:space-between;align-items:center;gap:8px;pointer-events:none
+}
+.cluster{display:flex;gap:8px;min-width:0;align-items:center;flex-wrap:wrap}
+.pill{
+  pointer-events:auto;padding:9px 12px;border-radius:15px;background:#0b1720e8;
+  border:1px solid #304958;box-shadow:0 8px 25px #0006;backdrop-filter:blur(10px);font-size:13px
+}
+.code{font-weight:900;color:#fbbf24;letter-spacing:2px}
+.money{color:#86efac;font-weight:900}
+.levelPill{color:#fde68a;font-weight:900}
+.healthPill{color:#dbeafe}
+.healthPill b{color:#86efac}
+.exit{
+  pointer-events:auto;border:1px solid #ef444455;background:#3b1118db;color:#fecaca;
+  border-radius:13px;padding:9px 12px;font-weight:900;cursor:pointer
+}
+
+.orders{
+  position:absolute;z-index:29;right:12px;top:67px;width:260px;max-height:45vh;overflow:hidden;
+  padding:12px;border-radius:19px;background:#0b1720e5;border:1px solid #304958;backdrop-filter:blur(10px)
+}
+.orders h3{margin:0 0 9px;font-size:14px;color:#fde68a}
+.order{
+  padding:10px;margin-top:7px;border-radius:13px;background:#13232f;border:1px solid #294555
+}
+.orderTop{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px}
+.orderDish{font-weight:900}.orderTime{font-size:11px;color:#a9bdc9}.order.warn{border-color:#f59e0b99}.order.late{border-color:#ef4444aa;background:#2a171b}
+.emptyOrders{font-size:12px;color:#9eb4c0;padding:8px 2px}
+
+.task{
+  position:absolute;z-index:28;left:50%;top:70px;transform:translateX(-50%);
+  width:min(550px,68vw);padding:11px 15px;border-radius:16px;background:#0b1720e8;
+  border:1px solid #304958;text-align:center;backdrop-filter:blur(10px);pointer-events:none
+}
+.task strong{display:block;font-size:15px;margin-bottom:3px}
+.task span{font-size:11px;color:#afc4cf;line-height:1.6}
+
+.interact{
+  position:absolute;z-index:31;left:50%;bottom:50px;transform:translateX(-50%);
+  min-width:250px;max-width:70vw;padding:11px 15px;border-radius:17px;background:#0b1720ef;
+  border:1px solid #f59e0b77;text-align:center;box-shadow:0 10px 35px #0007;pointer-events:none
+}
+.interact b{color:#fde68a}.interact small{display:block;color:#a9bdc9;margin-top:3px}
+
+.held{
+  position:absolute;z-index:30;left:12px;top:68px;padding:11px 13px;border-radius:16px;
+  background:#0b1720e5;border:1px solid #304958;backdrop-filter:blur(10px);font-size:12px
+}
+.held b{display:block;margin-top:3px;font-size:15px;color:#fff}
+.roleBadge{
+  position:absolute;z-index:30;left:12px;top:124px;padding:10px 12px;border-radius:15px;
+  background:#0b1720e5;border:1px solid #304958;backdrop-filter:blur(10px);font-size:12px
+}
+.roleBadge b{display:block;margin-top:3px;color:#fde68a;font-size:14px}
+.queueBox{
+  position:absolute;z-index:29;right:12px;top:355px;width:260px;padding:11px;border-radius:18px;
+  background:#0b1720e5;border:1px solid #304958;backdrop-filter:blur(10px)
+}
+.queueBox h3{margin:0 0 7px;font-size:13px;color:#bfdbfe}
+.queueLine{font-size:12px;color:#c8d7df;line-height:1.7}
+
+.laptopOverlay{
+  position:absolute;inset:0;z-index:80;display:grid;place-items:center;padding:18px;
+  background:#020609aa;backdrop-filter:blur(9px)
+}
+.laptop{
+  width:min(920px,96vw);max-height:90%;overflow:auto;border-radius:24px;
+  background:#0b1118;border:2px solid #394955;box-shadow:0 30px 100px #000d;
+  color:#e5edf2
+}
+.laptopTop{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 16px;
+  background:linear-gradient(180deg,#1d2932,#111920);border-bottom:1px solid #344651;position:sticky;top:0;z-index:2
+}
+.laptopBrand{font-weight:1000;color:#fde68a}.laptopClose{
+  width:42px;height:36px;border:0;border-radius:10px;background:#3b1118;color:#fecaca;font-weight:1000;cursor:pointer
+}
+.laptopTabs{display:flex;gap:7px;padding:12px 14px 0;flex-wrap:wrap}
+.laptopTab{
+  border:1px solid #344955;background:#111c24;color:#b9cad3;border-radius:11px;padding:9px 13px;font-weight:900;cursor:pointer
+}
+.laptopTab.active{background:#1e3a4a;color:#fff;border-color:#5a8198}
+.laptopBody{padding:14px}
+.laptopGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+.laptopCard{background:#111c24;border:1px solid #314552;border-radius:15px;padding:13px}
+.laptopCard h4{margin:0 0 8px;font-size:14px}.laptopCard p{margin:4px 0;color:#a9bdc9;font-size:12px;line-height:1.6}
+.laptopAction{
+  width:100%;margin-top:9px;border:0;border-radius:11px;padding:10px;background:#2563eb;color:white;font-weight:900;cursor:pointer
+}
+.laptopAction.green{background:#15803d}.laptopAction.amber{background:#b45309}.laptopAction:disabled{opacity:.45;cursor:not-allowed}
+.stockRow{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:8px;padding:10px 0;border-top:1px solid #ffffff0d}
+.stockCount{font-weight:1000;color:#86efac}.price{font-size:11px;color:#fcd34d}
+.manualForm{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end}
+.manualForm select{
+  width:100%;padding:11px;border-radius:11px;border:1px solid #344955;background:#09131b;color:white;font:inherit
+}
+.cashierHint{padding:10px 12px;border-radius:12px;background:#17252f;color:#c9d8df;font-size:12px;line-height:1.7;margin-bottom:10px}
+@media(max-width:700px){
+  .laptopGrid{grid-template-columns:1fr}.manualForm{grid-template-columns:1fr}.laptop{max-height:88%}
+}
+
+.progressWrap{
+  position:absolute;z-index:35;left:50%;bottom:105px;transform:translateX(-50%);
+  width:min(360px,65vw);padding:10px 12px;border-radius:15px;background:#0b1720ed;
+  border:1px solid #304958;text-align:center;backdrop-filter:blur(10px)
+}
+.progressWrap b{display:block;font-size:12px;margin-bottom:7px}
+.progress{height:9px;border-radius:99px;background:#ffffff12;overflow:hidden}
+.progressFill{height:100%;width:0;background:linear-gradient(90deg,#f59e0b,#22c55e)}
+
+.cameraTools{
+  position:absolute;z-index:31;left:12px;top:130px;display:flex;gap:6px
+}
+.camBtn{
+  height:43px;min-width:44px;padding:0 11px;border-radius:13px;border:1px solid #304958;
+  background:#0b1720df;color:#e2edf2;font-weight:900;cursor:pointer;backdrop-filter:blur(10px)
+}
+
+.controls{
+  position:absolute;z-index:32;left:12px;bottom:12px;display:grid;
+  grid-template-columns:55px 55px 55px 82px;grid-template-rows:55px 55px;gap:6px;direction:ltr
+}
+.ctrl{
+  border:1px solid #ffffff24;background:#102633df;color:#fff;border-radius:17px;
+  font-weight:900;font-size:20px;touch-action:none;user-select:none
+}
+.ctrl:active{background:#285368}.up{grid-column:2}.left{grid-row:2;grid-column:1}.down{grid-row:2;grid-column:2}.right{grid-row:2;grid-column:3}
+.act{grid-row:1/3;grid-column:4;background:linear-gradient(145deg,#f59e0b,#92400e);font-size:13px}
+
+.toast{
+  position:absolute;z-index:50;left:50%;bottom:150px;transform:translateX(-50%);
+  padding:10px 15px;border-radius:13px;background:#08131bef;border:1px solid #ffffff24;
+  opacity:0;transition:.2s;pointer-events:none
+}
+.toast.show{opacity:1;bottom:164px}
+
+.help{
+  position:absolute;z-index:20;left:50%;bottom:15px;transform:translateX(-50%);
+  color:#b8cbd5;font-size:11px;text-shadow:0 2px 8px #000;white-space:nowrap
+}
+
+@media(max-width:760px){
+  .card{padding:22px}.features{grid-template-columns:1fr}.orders{width:170px;top:106px}
+  .order{padding:8px}.task{top:108px;width:55vw;padding:8px 10px}.task strong{font-size:12px}.task span{font-size:9px}
+  .held{top:auto;bottom:130px;left:auto;right:10px}.roleBadge{top:auto;bottom:190px;left:auto;right:10px}
+  .queueBox{right:10px;top:330px;width:170px}.cameraTools{top:auto;bottom:130px;left:10px}
+  .controls{left:8px;bottom:8px;grid-template-columns:50px 50px 50px 70px;grid-template-rows:50px 50px}
+  .help{display:none}.cluster{max-width:80vw}.pill{padding:7px 9px;font-size:11px}
+}
+</style>
+</head>
+<body>
+
+<section id="lobby" class="screen">
+  <div class="card">
+    <div class="logo">🍽️</div>
+    <h1>Restaurant Together 3D</h1>
+    <div class="sub">محاكاة مطعم جماعية: افتح غرفة وشارك الكود مع أصدقائك، ثم قسموا العمل بينكم لتحضير الطلبات وخدمة الزبائن.</div>
+
+    <div class="features">
+      <div class="feature"><b>👨‍🍳 اطبخوا معًا</b><span>كل لاعب يقدر يحمل مكوّن ويكمل مرحلة مختلفة من الوصفة.</span></div>
+      <div class="feature"><b>💳 كاشير أساسي</b><span>لا يدخل طلب للمطبخ حتى يستلمه لاعب يعمل على الكاشير.</span></div>
+      <div class="feature"><b>🏗️ مطعم يتطور</b><span>لفلات وXP وتوسعات وطاولات جديدة ونظافة وسمعة وزبائن يتفاعلون معك.</span></div>
+    </div>
+
+    <div class="field"><label>اسمك داخل المطعم</label><input id="playerName" maxlength="24" placeholder="مثال: عبدالملك"></div>
+    <div class="field"><label>كود مطعم صديقك</label><input id="roomInput" maxlength="6" autocomplete="off" placeholder="مثال: R8K2M4" style="text-align:center;letter-spacing:3px;text-transform:uppercase"></div>
+
+    <div class="actions">
+      <button id="createBtn" class="btn primary">فتح مطعم جديد</button>
+      <button id="joinBtn" class="btn">دخول مطعم</button>
+    </div>
+    <div id="message" class="msg"></div>
+  </div>
+</section>
+
+<section id="game" class="hidden">
+  <div id="world"></div>
+
+  <div class="topbar">
+    <div class="cluster">
+      <div class="pill">المطعم: <span id="codeView" class="code">------</span></div>
+      <div class="pill">👥 <b id="playersCount">1</b></div>
+      <div class="pill money">💵 <span id="balanceView">0</span> ريال</div>
+      <div class="pill levelPill">⭐ Lv <span id="levelView">1</span> • <span id="xpView">0</span> XP</div>
+      <div class="pill healthPill">😊 <b id="repView">100</b>% • 🧹 <b id="cleanView">100</b>%</div>
+    </div>
+    <button id="exitBtn" class="exit">خروج</button>
+  </div>
+
+  <aside class="orders">
+    <h3>🧾 طلبات الزبائن</h3>
+    <div id="ordersList"><div class="emptyOrders">بانتظار أول طلب...</div></div>
+  </aside>
+
+  <div id="taskBox" class="task">
+    <strong>ابدأ العمل 👨‍🍳</strong>
+    <span>اقترب من محطة في المطبخ واضغط E أو زر «استخدم».</span>
+  </div>
+
+  <div class="held">ما تحمله الآن:<b id="heldView">لا شيء</b></div>
+  <div class="roleBadge">وظيفتك الحالية:<b id="roleView">طاقم عام</b></div>
+
+  <div class="queueBox">
+    <h3>🧍 طابور الكاشير</h3>
+    <div id="queueInfo" class="queueLine">لا يوجد زبائن ينتظرون.</div>
+  </div>
+
+  <div class="cameraTools">
+    <button id="resetCamBtn" class="camBtn" type="button">🎥</button>
+    <button id="zoomInBtn" class="camBtn" type="button">＋</button>
+    <button id="zoomOutBtn" class="camBtn" type="button">−</button>
+  </div>
+
+  <div id="interactBox" class="interact hidden"></div>
+
+  <div id="progressWrap" class="progressWrap hidden">
+    <b id="progressLabel">جاري التحضير...</b>
+    <div class="progress"><div id="progressFill" class="progressFill"></div></div>
+  </div>
+
+  <div class="controls">
+    <button class="ctrl up" data-key="ArrowUp">▲</button>
+    <button class="ctrl left" data-key="ArrowLeft">◀</button>
+    <button class="ctrl down" data-key="ArrowDown">▼</button>
+    <button class="ctrl right" data-key="ArrowRight">▶</button>
+    <button id="actionBtn" class="ctrl act">استخدم<br>🍳</button>
+  </div>
+
+  <div class="help">WASD / الأسهم للحركة • E للتفاعل • اسحب الشاشة لتحريك الكاميرا • عجلة الماوس للتقريب</div>
+  <div id="toast" class="toast"></div>
+
+  <div id="laptopOverlay" class="laptopOverlay hidden">
+    <div class="laptop">
+      <div class="laptopTop">
+        <div class="laptopBrand">💻 نظام كاشير Restaurant OS</div>
+        <button id="closeLaptopBtn" class="laptopClose" type="button">✕</button>
+      </div>
+
+      <div class="laptopTabs">
+        <button class="laptopTab active" data-laptop-tab="customers" type="button">🧍 الزبائن</button>
+        <button class="laptopTab" data-laptop-tab="manual" type="button">➕ طلب يدوي</button>
+        <button class="laptopTab" data-laptop-tab="stock" type="button">📦 طلبات المطعم</button>
+        <button class="laptopTab" data-laptop-tab="management" type="button">🏗️ تطوير المطعم</button>
+      </div>
+
+      <div id="laptopBody" class="laptopBody"></div>
+    </div>
+  </div>
+</section>
+
+<script type="module">
+import * as THREE from 'three';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+const SUPABASE_URL="https://vrbbciunbnuaycizeekb.supabase.co";
+const SUPABASE_KEY="sb_publishable_dhTvJsn4fvy5gl1MJKr7PQ_eUp9f5qW";
+const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+const $=s=>document.querySelector(s);
+const lobby=$("#lobby"),game=$("#game"),world=$("#world"),msg=$("#message");
+const ordersList=$("#ordersList"),heldView=$("#heldView"),taskBox=$("#taskBox");
+const interactBox=$("#interactBox"),progressWrap=$("#progressWrap"),progressFill=$("#progressFill"),progressLabel=$("#progressLabel");
+const roleView=$("#roleView"),queueInfo=$("#queueInfo");
+const laptopOverlay=$("#laptopOverlay"),laptopBody=$("#laptopBody");
+const levelView=$("#levelView"),xpView=$("#xpView"),repView=$("#repView"),cleanView=$("#cleanView");
+
+const keys=new Set(),players=new Map(),orders=new Map(),playerMeshes=new Map();
+let user=null,room=null,me=null,roomChannel=null,playerChannel=null,orderChannel=null,inventoryChannel=null,trashChannel=null;
+let heartbeat=null,running=false,lastSync=0,lastOrderAttempt=0,hostOrderTimer=0;
+let nearestStation=null,actionJob=null,audioCtx=null;
+let velX=0,velZ=0;
+let inventory={meat:0,vegetables:0,pasta:0};
+let laptopTab="customers";
+let nearestTrash=null,lastPatienceCheck=0;
+const trashItems=new Map(),trashMeshes=new Map(),completingOrders=new Set(),complaintLocks=new Set();
+
+/* ----------------- Three.js ----------------- */
+let scene,camera,renderer,clock,pmrem;
+let restaurantGroup,playersGroup,customersGroup,labelsGroup,trashGroup;
+let expansion2Group,expansion3Group,kitchenDoorPivot,rightExpansionShutter,leftExpansionShutter;
+let ownVisualY=0;
+
+let camYaw=0,camPitch=.47,camDist=10.5;
+let dragging=false,pointerId=null,lastPX=0,lastPY=0;
+
+const collisions=[],expansion2Collisions=[],expansion3Collisions=[];
+const stations=[];
+const customerByTable=new Map();
+const tablePositions={
+  1:new THREE.Vector3(-7,0,5.5),
+  2:new THREE.Vector3(7,0,5.5),
+  3:new THREE.Vector3(-7,0,11.3),
+  4:new THREE.Vector3(7,0,11.3),
+  5:new THREE.Vector3(20.5,0,5.5),
+  6:new THREE.Vector3(20.5,0,11.3),
+  7:new THREE.Vector3(-20.5,0,5.5),
+  8:new THREE.Vector3(-20.5,0,11.3)
+};
+
+const ITEM_LABEL={
+  raw_meat:"🥩 لحم نيء",
+  vegetables:"🥬 خضار",
+  dry_pasta:"🍝 مكرونة جافة",
+  burger:"🍔 برجر",
+  salad:"🥗 سلطة",
+  pasta:"🍝 باستا"
+};
+const DISH_LABEL={burger:"🍔 برجر",salad:"🥗 سلطة",pasta:"🍝 باستا"};
+const CUSTOMER_NAMES=["سعد","فهد","ماجد","نواف","ريان","سلمان","تركي","راكان","خالد","زياد","عبدالله","حمد"];
+const STATION_HINT={
+  meat:"خذ اللحم النيء",
+  veg:"خذ الخضار",
+  pastaBox:"خذ المكرونة",
+  grill:"اطبخ اللحم على الشواية",
+  chop:"قطّع الخضار",
+  pot:"اطبخ المكرونة",
+  serve:"قدّم الطبق المطلوب",
+  trash:"ارمِ ما تحمله"
+};
+
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
+function code(){const c="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";return Array.from({length:6},()=>c[Math.floor(Math.random()*c.length)]).join("")}
+function lock(v){$("#createBtn").disabled=v;$("#joinBtn").disabled=v}
+function say(t,bad=true){msg.textContent=t;msg.style.color=bad?"#fca5a5":"#86efac"}
+function toast(t){const e=$("#toast");e.textContent=t;e.classList.add("show");setTimeout(()=>e.classList.remove("show"),1200)}
+function freshPlayers(){const cut=Date.now()-16000;return [...players.values()].filter(p=>new Date(p.updated_at||0).getTime()>cut)}
+function isHost(){return room?.host_user_id===user?.id}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+function hashText(s){
+  let h=2166136261;
+  for(const c of String(s)){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}
+  return h>>>0;
+}
+function addFunnyFace(group,seedValue,headY=2.45){
+  const h=hashText(seedValue);
+  const hairColor=[0x2a1812,0x4a2f22,0x181818,0x6b442f][h%4];
+  const facial=new THREE.MeshStandardMaterial({color:hairColor,roughness:.92});
+  const whiteMat=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.38});
+  const blackMat=new THREE.MeshStandardMaterial({color:0x111111,roughness:.3});
+  const mouthMat=new THREE.MeshStandardMaterial({color:0x7f1d1d,roughness:.7});
+
+  // آذان صغيرة
+  for(const side of [-1,1]){
+    const ear=new THREE.Mesh(new THREE.SphereGeometry(.085,10,8),new THREE.MeshStandardMaterial({color:0xc98d69,roughness:.75}));
+    ear.scale.set(.65,1,.55);ear.position.set(side*.37,headY,.02);group.add(ear);
+  }
+
+  // عيون كبيرة مضحكة
+  for(const x of [-.14,.14]){
+    const eye=new THREE.Mesh(new THREE.SphereGeometry(.11,14,10),whiteMat);
+    eye.scale.set(1,1.28,.72);eye.position.set(x,headY+.07,.34);group.add(eye);
+    const pupil=new THREE.Mesh(new THREE.SphereGeometry(.047,10,8),blackMat);
+    pupil.position.set(x+((h>>3)%3-1)*.008,headY+.065,.414);group.add(pupil);
+  }
+
+  const nose=new THREE.Mesh(new THREE.SphereGeometry(.078,12,9),new THREE.MeshStandardMaterial({color:0xc78763,roughness:.7}));
+  nose.scale.set(.78,1.1,.9);nose.position.set(0,headY-.025,.414);group.add(nose);
+
+  // فم
+  const mouth=new THREE.Mesh(new THREE.TorusGeometry(.105,.018,6,18,Math.PI),mouthMat);
+  mouth.rotation.z=Math.PI;mouth.position.set(0,headY-.19,.41);group.add(mouth);
+
+  // شنب بعدة أشكال
+  if(h%5!==0){
+    for(const side of [-1,1]){
+      const moustache=new THREE.Mesh(new THREE.SphereGeometry(.12,12,8),facial);
+      moustache.scale.set(1.38,.38,.34);
+      moustache.position.set(side*.098,headY-.115,.405);
+      moustache.rotation.z=side*((h%3===0)?.42:.24);
+      group.add(moustache);
+    }
+  }
+
+  // لحية كاملة أو سكسوكة
+  if(h%4===0){
+    const beard=new THREE.Mesh(new THREE.SphereGeometry(.27,16,10),facial);
+    beard.scale.set(1,.72,.50);beard.position.set(0,headY-.30,.26);group.add(beard);
+  }else if(h%4===1){
+    const goatee=new THREE.Mesh(new THREE.SphereGeometry(.105,12,8),facial);
+    goatee.scale.set(.75,1.4,.42);goatee.position.set(0,headY-.31,.37);group.add(goatee);
+  }
+
+  // حواجب
+  for(const side of [-1,1]){
+    const brow=new THREE.Mesh(new THREE.BoxGeometry(.19,.038,.035),facial);
+    brow.position.set(side*.14,headY+.21,.39);
+    brow.rotation.z=side*((h%2)?-.14:.10);group.add(brow);
+  }
+
+  // نظارات لبعض الشخصيات
+  if(h%6===0){
+    for(const side of [-1,1]){
+      const lens=new THREE.Mesh(new THREE.TorusGeometry(.13,.018,7,18),blackMat);
+      lens.position.set(side*.145,headY+.07,.41);group.add(lens);
+    }
+    const bridge=new THREE.Mesh(new THREE.BoxGeometry(.09,.018,.018),blackMat);
+    bridge.position.set(0,headY+.07,.41);group.add(bridge);
+  }
+}
+function beep(freq=520,dur=.07,type="sine",vol=.035){
+  try{
+    audioCtx ||= new (window.AudioContext||window.webkitAudioContext)();
+    const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+    o.type=type;o.frequency.value=freq;g.gain.value=vol;o.connect(g);g.connect(audioCtx.destination);
+    o.start();g.gain.exponentialRampToValueAtTime(.0001,audioCtx.currentTime+dur);o.stop(audioCtx.currentTime+dur);
+  }catch{}
+}
+
+function makeWoodTexture(){
+  const c=document.createElement("canvas");c.width=512;c.height=512;
+  const x=c.getContext("2d");
+  x.fillStyle="#6c4a32";x.fillRect(0,0,512,512);
+  for(let i=0;i<26;i++){
+    x.strokeStyle=`rgba(35,18,8,${.08+Math.random()*.09})`;
+    x.lineWidth=1+Math.random()*3;x.beginPath();
+    const y=Math.random()*512;x.moveTo(0,y);
+    for(let px=0;px<=512;px+=32)x.lineTo(px,y+Math.sin(px*.04+i)*3+Math.random()*2);
+    x.stroke();
+  }
+  for(let y=0;y<512;y+=64){x.fillStyle="#00000010";x.fillRect(0,y,512,2)}
+  const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(4,5);t.colorSpace=THREE.SRGBColorSpace;
+  return t;
+}
+
+function makeTileTexture(){
+  const c=document.createElement("canvas");c.width=512;c.height=512;
+  const x=c.getContext("2d");x.fillStyle="#d8d2c9";x.fillRect(0,0,512,512);
+  x.strokeStyle="#9f9990";x.lineWidth=5;
+  for(let i=0;i<=512;i+=128){x.beginPath();x.moveTo(i,0);x.lineTo(i,512);x.stroke();x.beginPath();x.moveTo(0,i);x.lineTo(512,i);x.stroke()}
+  const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(4,3);t.colorSpace=THREE.SRGBColorSpace;
+  return t;
+}
+
+function labelSprite(text,color="#ffffff",bg="rgba(8,18,25,.88)"){
+  const c=document.createElement("canvas");c.width=512;c.height=128;
+  const x=c.getContext("2d");
+  x.fillStyle=bg;x.beginPath();x.roundRect(30,15,452,92,28);x.fill();
+  x.font="bold 39px Tahoma";x.textAlign="center";x.textBaseline="middle";x.fillStyle=color;x.fillText(text,256,62);
+  const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;
+  const s=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false}));
+  s.scale.set(4.8,1.2,1);return s;
+}
+
+function box(w,h,d,material,x,y,z,round=.08){
+  const g=round?new RoundedBoxGeometry(w,h,d,4,round):new THREE.BoxGeometry(w,h,d);
+  const m=new THREE.Mesh(g,material);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;restaurantGroup.add(m);return m;
+}
+function addCollision(x,z,w,d){collisions.push({x,z,w,d})}
+function addExpansionCollision(which,x,z,w,d){
+  (which===2?expansion2Collisions:expansion3Collisions).push({x,z,w,d});
+}
+function boxTo(group,w,h,d,material,x,y,z,round=.08){
+  const g=round?new RoundedBoxGeometry(w,h,d,4,round):new THREE.BoxGeometry(w,h,d);
+  const m=new THREE.Mesh(g,material);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;group.add(m);return m;
+}
+function activeTableNumbers(){
+  if((room?.expansion||1)>=3)return [1,2,3,4,5,6,7,8];
+  if((room?.expansion||1)>=2)return [1,2,3,4,5,6];
+  return [1,2,3,4];
+}
+function updateRoomHUD(){
+  if(!room)return;
+  $("#balanceView").textContent=room.balance||0;
+  levelView.textContent=room.level||1;
+  xpView.textContent=`${room.xp||0}/${(room.level||1)*100}`;
+  repView.textContent=room.reputation??100;
+  cleanView.textContent=room.cleanliness??100;
+  updateExpansionVisuals();
+  renderLaptop();
+}
+function mat(color,rough=.6,metal=.05){
+  return new THREE.MeshStandardMaterial({color,roughness:rough,metalness:metal});
+}
+
+function init3D(){
+  if(renderer)return;
+
+  scene=new THREE.Scene();
+  scene.background=new THREE.Color(0x9eb6c3);
+  scene.fog=new THREE.Fog(0x9eb6c3,30,70);
+
+  camera=new THREE.PerspectiveCamera(58,innerWidth/innerHeight,.1,120);
+  camera.position.set(0,7,12);
+
+  renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:"high-performance"});
+  const isMobile=matchMedia("(pointer:coarse)").matches || innerWidth<800;
+  renderer.setPixelRatio(Math.min(devicePixelRatio,isMobile?1.22:1.45));
+  renderer.setSize(innerWidth,innerHeight);
+  renderer.shadowMap.enabled=true;
+  renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+  renderer.outputColorSpace=THREE.SRGBColorSpace;
+  renderer.toneMapping=THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure=1.08;
+  world.appendChild(renderer.domElement);
+
+  pmrem=new THREE.PMREMGenerator(renderer);
+  scene.environment=pmrem.fromScene(new RoomEnvironment(),.04).texture;
+
+  scene.add(new THREE.HemisphereLight(0xdff4ff,0x45382d,1.7));
+  const sun=new THREE.DirectionalLight(0xfff4df,3.2);
+  sun.position.set(-8,18,10);sun.castShadow=true;sun.shadow.mapSize.set(isMobile?1024:2048,isMobile?1024:2048);
+  sun.shadow.camera.left=-24;sun.shadow.camera.right=24;sun.shadow.camera.top=24;sun.shadow.camera.bottom=-24;
+  sun.shadow.bias=-.0002;scene.add(sun);
+
+  restaurantGroup=new THREE.Group();playersGroup=new THREE.Group();customersGroup=new THREE.Group();labelsGroup=new THREE.Group();trashGroup=new THREE.Group();
+  scene.add(restaurantGroup,playersGroup,customersGroup,labelsGroup,trashGroup);
+
+  buildRestaurant();
+  installCameraControls();
+
+  clock=new THREE.Clock();
+  addEventListener("resize",()=>{
+    camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)
+  });
+}
+
+function buildRestaurant(){
+  const wood=makeWoodTexture(),tile=makeTileTexture();
+  const wallMat=mat(0xe8e4dc,.92,0);
+  const steel=new THREE.MeshStandardMaterial({color:0x9aa7ad,roughness:.23,metalness:.82});
+  const dark=new THREE.MeshStandardMaterial({color:0x22282c,roughness:.38,metalness:.58});
+  const counterTop=new THREE.MeshPhysicalMaterial({color:0xe7e1d7,roughness:.32,metalness:.03,clearcoat:.65,clearcoatRoughness:.25});
+  const tableMat=mat(0x6b442d,.5,.08);
+  const chairMat=mat(0x2f3940,.55,.25);
+  const frame=mat(0x252d31,.35,.65);
+  const glassMat=new THREE.MeshPhysicalMaterial({
+    color:0xbde8f5,roughness:.05,metalness:0,transparent:true,opacity:.22,transmission:.55,thickness:.1
+  });
+
+  // الأرضيات الرئيسية
+  const dining=new THREE.Mesh(new THREE.PlaneGeometry(30,18),new THREE.MeshStandardMaterial({map:wood,roughness:.8}));
+  dining.rotation.x=-Math.PI/2;dining.position.set(0,0,7);dining.receiveShadow=true;restaurantGroup.add(dining);
+
+  const kitchen=new THREE.Mesh(new THREE.PlaneGeometry(30,10),new THREE.MeshStandardMaterial({map:tile,roughness:.72}));
+  kitchen.rotation.x=-Math.PI/2;kitchen.position.set(0,.01,-7);kitchen.receiveShadow=true;restaurantGroup.add(kitchen);
+
+  // جدران المطعم الخلفية والجانبية
+  box(30,4.8,.35,wallMat,0,2.4,-12,false);
+  box(.35,4.8,10,wallMat,-15,2.4,-7,false);
+  box(.35,4.8,10,wallMat,15,2.4,-7,false);
+
+  // واجهة زجاجية وباب دخول
+  const leftGlass=new THREE.Mesh(new THREE.PlaneGeometry(12,4.3),glassMat);leftGlass.position.set(-8.5,2.35,16);restaurantGroup.add(leftGlass);
+  const rightGlass=leftGlass.clone();rightGlass.position.x=8.5;restaurantGroup.add(rightGlass);
+  box(.18,4.7,30,frame,-14.9,2.35,1.8,false);
+  box(.18,4.7,30,frame,14.9,2.35,1.8,false);
+
+  // باب الدخول الزجاجي في المنتصف
+  const entranceFrame=box(5,.18,.18,frame,0,4.5,15.95,false);
+  for(const side of [-1,1]){
+    const door=new THREE.Mesh(new THREE.BoxGeometry(2.1,4.1,.08),glassMat);
+    door.position.set(side*1.12,2.15,15.92);restaurantGroup.add(door);
+    const handle=new THREE.Mesh(new THREE.BoxGeometry(.05,.7,.08),steel);
+    handle.position.set(side*.32,2.15,.08);door.add(handle);
+  }
+
+  // فصل المطبخ عن الصالة مع باب حقيقي وفتحة تسليم
+  box(5,4.3,.30,wallMat,-12.5,2.15,-2.35,false);addCollision(-12.5,-2.35,5,.45);
+  box(5,4.3,.30,wallMat,-5.0,2.15,-2.35,false);addCollision(-5,-2.35,5,.45);
+  box(12.5,4.3,.30,wallMat,8.75,2.15,-2.35,false);addCollision(8.75,-2.35,12.5,.45);
+
+  // باب المطبخ المتأرجح
+  kitchenDoorPivot=new THREE.Group();kitchenDoorPivot.position.set(-10,-0.0,-2.28);restaurantGroup.add(kitchenDoorPivot);
+  const kitchenDoor=boxTo(kitchenDoorPivot,2.35,3.6,.12,mat(0x6f4e37,.55,.08),1.18,1.8,0,.07);
+  const doorWindow=new THREE.Mesh(new THREE.BoxGeometry(.75,1.25,.05),glassMat);doorWindow.position.set(.35,.45,.08);kitchenDoor.add(doorWindow);
+  const kickPlate=new THREE.Mesh(new THREE.BoxGeometry(1.8,.42,.06),steel);kickPlate.position.set(0,-1.25,.08);kitchenDoor.add(kickPlate);
+
+  // كاونتر الاستلام في فتحة الجدار
+  box(5.5,1.15,1.45,counterTop,0,.58,-1.75,.11);addCollision(0,-1.75,5.5,1.45);
+  const heatLamp=new THREE.PointLight(0xffc26b,7,6);heatLamp.position.set(0,3,-1.2);scene.add(heatLamp);
+  for(const x of [-1.2,0,1.2]){
+    const lamp=new THREE.Mesh(new THREE.ConeGeometry(.34,.48,20),mat(0x363230,.3,.45));
+    lamp.position.set(x,2.7,-1.4);lamp.rotation.x=Math.PI;restaurantGroup.add(lamp);
+  }
+
+  // تجهيزات المطبخ الواقعية
+  box(27,1.7,2.2,steel,0,.85,-10.35,.10);addCollision(0,-10.35,27,2.2);
+  box(18,1.35,2.15,steel,0,.68,-5.45,.10);addCollision(0,-5.45,18,2.15);
+  box(3,5,2.4,steel,-12,2.5,-10.2,.14);addCollision(-12,-10.2,3,2.4);
+
+  // رفوف وصحون
+  for(const y of [2.0,3.2]){
+    box(6,.12,.8,steel,9.3,y,-11.55,.03);
+    for(let i=0;i<5;i++){
+      const plate=new THREE.Mesh(new THREE.CylinderGeometry(.34,.34,.045,20),mat(0xf8fafc,.35,.02));
+      plate.rotation.z=Math.PI/2;plate.position.set(7.4+i*.9,y+.24,-11.25);restaurantGroup.add(plate);
+    }
+  }
+
+  // صندوق الخضار
+  const crateMat=mat(0x8b5e3c,.72,.02);
+  box(2.5,1.25,2.1,crateMat,-8,.63,-5.4,.12);
+  for(let i=0;i<8;i++){
+    const veg=new THREE.Mesh(new THREE.SphereGeometry(.22,10,8),mat(i%2?0x4d7c0f:0x16a34a,.7,0));
+    veg.position.set(-8+(Math.random()-.5)*1.5,1.35,-5.4+(Math.random()-.5)*1.1);restaurantGroup.add(veg);
+  }
+
+  // مخزن المكرونة
+  box(2.6,2.4,1.5,crateMat,-4.5,1.2,-10.45,.1);addCollision(-4.5,-10.45,2.6,1.5);
+
+  // لوح تقطيع وشواية وقدر
+  box(3,.18,1.7,mat(0xc79a63,.74,0),-3,1.5,-5.4,.06);
+  box(3,.35,1.8,dark,3,1.55,-5.4,.08);
+  for(let i=-1;i<=1;i++)box(.06,.06,1.45,steel,3+i*.55,1.77,-5.4,.01);
+  const pot=new THREE.Mesh(new THREE.CylinderGeometry(.8,.72,.65,24),steel);pot.position.set(7.3,1.65,-5.4);pot.castShadow=true;restaurantGroup.add(pot);
+  const potInside=new THREE.Mesh(new THREE.CylinderGeometry(.63,.63,.05,24),mat(0x8ecae6,.25,.05));potInside.position.set(7.3,2,-5.4);restaurantGroup.add(potInside);
+
+  // حوض غسيل
+  box(3.1,1.0,1.7,steel,11,.5,-5.4,.08);addCollision(11,-5.4,3.1,1.7);
+  const sink=new THREE.Mesh(new THREE.BoxGeometry(1.9,.18,1.0),new THREE.MeshStandardMaterial({color:0x71818a,metalness:.85,roughness:.2}));
+  sink.position.set(11,1.08,-5.4);restaurantGroup.add(sink);
+
+  // كاشير واقعي ولابتوب
+  const cashWood=mat(0x5a3a28,.5,.06);
+  box(6.5,1.25,1.8,cashWood,9,.62,1.6,.12);addCollision(9,1.6,6.5,1.8);
+  box(1.55,.5,.95,dark,9,1.5,1.55,.08);
+  const registerScreen=box(1.15,.72,.12,new THREE.MeshStandardMaterial({color:0x1f2937,emissive:0x38bdf8,emissiveIntensity:.75,roughness:.35}),9,2.02,1.25,.05);
+  registerScreen.rotation.x=-.12;
+  box(.75,.12,.55,new THREE.MeshStandardMaterial({color:0x111827,emissive:0xef4444,emissiveIntensity:.45}),10.8,1.33,1.55,.05);
+
+  // نباتات وديكور
+  for(const [x,z] of [[-12.7,13],[12.7,13],[-12.7,2]]){
+    const potM=new THREE.Mesh(new THREE.CylinderGeometry(.5,.42,.8,18),mat(0x754b35,.72,.02));potM.position.set(x,.4,z);restaurantGroup.add(potM);
+    for(let i=0;i<5;i++){
+      const leaf=new THREE.Mesh(new THREE.SphereGeometry(.35,10,8),mat(0x287a3c,.82,0));
+      leaf.scale.set(.7,1.5,.55);leaf.position.set(x+(Math.random()-.5)*.45,1.1+Math.random()*.65,z+(Math.random()-.5)*.35);restaurantGroup.add(leaf);
+    }
+  }
+
+  // إضاءة سقف دافئة
+  for(const x of [-10,-5,0,5,10]){
+    const lamp=new THREE.PointLight(0xffd9a0,8,10,2);lamp.position.set(x,5.4,6);scene.add(lamp);
+    const shade=new THREE.Mesh(new THREE.CylinderGeometry(.28,.48,.40,20),mat(0x202326,.28,.5));shade.position.set(x,5.1,6);restaurantGroup.add(shade);
+  }
+
+  function makeDiningTable(no,p,parent,expansionNo=1){
+    const top=new THREE.Mesh(new THREE.CylinderGeometry(1.55,1.55,.18,32),tableMat);top.position.set(p.x,1.22,p.z);top.castShadow=true;top.receiveShadow=true;parent.add(top);
+    const leg=new THREE.Mesh(new THREE.CylinderGeometry(.23,.38,1.15,16),dark);leg.position.set(p.x,.57,p.z);parent.add(leg);
+    (expansionNo===1?addCollision:addExpansionCollision)(...(expansionNo===1?[p.x,p.z,3.2,3.2]:[expansionNo,p.x,p.z,3.2,3.2]));
+
+    for(const dz of [-1.95,1.95]){
+      const seat=boxTo(parent,1,.18,1,chairMat,p.x,.65,p.z+dz,.08);
+      boxTo(parent,.13,1.25,.13,chairMat,p.x-.35,.43,p.z+dz,.03);
+      boxTo(parent,.13,1.25,.13,chairMat,p.x+.35,.43,p.z+dz,.03);
+      boxTo(parent,.9,1.0,.12,chairMat,p.x,1.16,p.z+dz+(dz>0?.44:-.44),.06);
+    }
+  }
+
+  // الطاولات الأساسية
+  for(const no of [1,2,3,4])makeDiningTable(no,tablePositions[no],restaurantGroup,1);
+
+  // التوسعة اليمنى - لفل 2
+  expansion2Group=new THREE.Group();scene.add(expansion2Group);
+  const floor2=new THREE.Mesh(new THREE.PlaneGeometry(12,18),new THREE.MeshStandardMaterial({map:wood,roughness:.8}));
+  floor2.rotation.x=-Math.PI/2;floor2.position.set(21,0,7);floor2.receiveShadow=true;expansion2Group.add(floor2);
+  boxTo(expansion2Group,.35,4.6,18,wallMat,27,2.3,7,false);
+  boxTo(expansion2Group,12,4.6,.35,wallMat,21,2.3,16,false);
+  makeDiningTable(5,tablePositions[5],expansion2Group,2);makeDiningTable(6,tablePositions[6],expansion2Group,2);
+
+  // التوسعة اليسرى - لفل 4
+  expansion3Group=new THREE.Group();scene.add(expansion3Group);
+  const floor3=new THREE.Mesh(new THREE.PlaneGeometry(12,18),new THREE.MeshStandardMaterial({map:wood,roughness:.8}));
+  floor3.rotation.x=-Math.PI/2;floor3.position.set(-21,0,7);floor3.receiveShadow=true;expansion3Group.add(floor3);
+  boxTo(expansion3Group,.35,4.6,18,wallMat,-27,2.3,7,false);
+  boxTo(expansion3Group,12,4.6,.35,wallMat,-21,2.3,16,false);
+  makeDiningTable(7,tablePositions[7],expansion3Group,3);makeDiningTable(8,tablePositions[8],expansion3Group,3);
+
+  // بوابات التوسعة
+  rightExpansionShutter=box(1.0,3.4,5.5,mat(0x4b5563,.6,.35),14.7,1.7,9,.05);
+  rightExpansionShutter.rotation.z=Math.PI/2;
+  leftExpansionShutter=box(1.0,3.4,5.5,mat(0x4b5563,.6,.35),-14.7,1.7,9,.05);
+  leftExpansionShutter.rotation.z=Math.PI/2;
+
+  // إنشاء الزبائن لكل الطاولات
+  for(const no of Object.keys(tablePositions).map(Number)){
+    const customer=createCustomer(no,tablePositions[no]);customer.visible=false;customersGroup.add(customer);customerByTable.set(no,customer);
+  }
+
+  // نقاط التفاعل - الأسماء مخفية حتى الاقتراب
+  addStation("meat","🥩 ثلاجة اللحم",new THREE.Vector3(-12,0,-7.9),0xf59e0b);
+  addStation("veg","🥬 الخضار",new THREE.Vector3(-8,0,-3.7),0x22c55e);
+  addStation("pastaBox","🍝 المخزن",new THREE.Vector3(-4.5,0,-8.8),0xeab308);
+  addStation("chop","🔪 التقطيع",new THREE.Vector3(-3,0,-3.7),0x60a5fa);
+  addStation("grill","🔥 الشواية",new THREE.Vector3(3,0,-3.7),0xef4444);
+  addStation("pot","♨️ القدر",new THREE.Vector3(7.3,0,-3.7),0x38bdf8);
+  addStation("serve","🍽️ منطقة الاستلام",new THREE.Vector3(0,0,.05),0xfbbf24);
+  addStation("cashier","💳 الكاشير",new THREE.Vector3(9,0,3.1),0x60a5fa);
+  addStation("trash","🗑️ الحاوية",new THREE.Vector3(12.0,0,-7.2),0x94a3b8);
+
+  updateExpansionVisuals();
+}
+
+function updateExpansionVisuals(){
+  const exp=room?.expansion||1;
+  if(expansion2Group)expansion2Group.visible=exp>=2;
+  if(expansion3Group)expansion3Group.visible=exp>=3;
+  if(rightExpansionShutter)rightExpansionShutter.visible=exp<2;
+  if(leftExpansionShutter)leftExpansionShutter.visible=exp<3;
+}
+
+function updateKitchenDoor(dt){
+  if(!kitchenDoorPivot)return;
+  const near=freshPlayers().some(p=>Math.hypot(p.x+8.8,p.z+2.3)<3.0);
+  const target=near?-1.25:0;
+  kitchenDoorPivot.rotation.y=THREE.MathUtils.lerp(kitchenDoorPivot.rotation.y,target,1-Math.exp(-7*dt));
+}
+
+function addStation(kind,label,pos,color){
+  const ring=new THREE.Mesh(
+    new THREE.RingGeometry(1.05,1.3,32),
+    new THREE.MeshBasicMaterial({color,transparent:true,opacity:.55,side:THREE.DoubleSide})
+  );
+  ring.rotation.x=-Math.PI/2;ring.position.copy(pos);ring.position.y=.06;restaurantGroup.add(ring);
+
+  const s=labelSprite(label,"#ffffff");s.position.copy(pos);s.position.y=2.8;s.visible=false;labelsGroup.add(s);
+  ring.material.opacity=.14;
+  stations.push({kind,label,pos:ring.position.clone(),ring,sprite:s});
+}
+
+function createCustomer(tableNo,p){
+  const g=new THREE.Group();
+  const shirt=mat([0x2563eb,0x7c3aed,0x059669,0xbe123c][(tableNo-1)%4],.62,0);
+  const skin=mat([0xd9a77e,0xc88962,0xe0b18a,0xb97857][(tableNo-1)%4],.72,0);
+  const pants=mat(0x26333b,.72,.03);
+
+  const body=new THREE.Mesh(new THREE.CapsuleGeometry(.45,.62,5,10),shirt);
+  body.position.y=1.58;body.castShadow=true;g.add(body);
+
+  const head=new THREE.Mesh(new THREE.SphereGeometry(.39,18,14),skin);
+  head.position.y=2.43;head.castShadow=true;g.add(head);
+  addFunnyFace(g,"customer-"+tableNo,2.43);
+
+  const lLeg=new THREE.Mesh(new THREE.CapsuleGeometry(.13,.48,4,8),pants);
+  lLeg.position.set(-.19,.56,0);g.add(lLeg);
+  const rLeg=lLeg.clone();rLeg.position.x=.19;g.add(rLeg);
+
+  const lArm=new THREE.Mesh(new THREE.CapsuleGeometry(.105,.42,4,8),shirt);
+  lArm.position.set(-.53,1.58,0);g.add(lArm);
+  const rArm=lArm.clone();rArm.position.x=.53;g.add(rArm);
+
+  // شعر مضحك / قبعة لبعض الزبائن
+  if(tableNo%2===0){
+    const hair=new THREE.Mesh(new THREE.SphereGeometry(.40,16,9,0,Math.PI*2,0,Math.PI/2),mat(0x2b1b16,.9,0));
+    hair.position.y=2.66;g.add(hair);
+  }else{
+    const cap=new THREE.Mesh(new THREE.CylinderGeometry(.38,.40,.14,18),mat(0x172554,.55,.1));
+    cap.position.y=2.76;g.add(cap);
+  }
+
+  const bubble=labelSprite("...", "#ffffff","rgba(21,32,40,.94)");
+  bubble.position.y=3.35;bubble.scale.set(3.2,.8,1);g.add(bubble);
+
+  g.position.set((tableNo%2?-.8:.8),0,16.3);
+  g.rotation.y=Math.PI;
+  g.userData={
+    tableNo,phase:Math.random()*6,lLeg,rLeg,lArm,rArm,walkT:Math.random()*5,
+    bubble,spawned:false,lastStatus:null
+  };
+  return g;
+}
+
+function createChef(p){
+  const g=new THREE.Group();
+  const h=hashText(p.name+"-"+p.id);
+  const skin=mat([0xd7a17c,0xc78f68,0xe2b28c,0xb77a58][h%4],.7,0);
+  const shirt=mat(0xf5f5f4,.68,0),pants=mat(0x202830,.72,.04),shoeMat=mat(0x111827,.45,.25);
+  const accent=p.id===me?.id?0xf59e0b:[0x38bdf8,0x22c55e,0x8b5cf6,0xef4444][h%4];
+
+  // جسم أنحف وأقرب لشخصية لعبة حديثة
+  const torso=new THREE.Mesh(new RoundedBoxGeometry(.86,1.28,.58,4,.18),shirt);torso.position.y=1.45;torso.castShadow=true;g.add(torso);
+  const head=new THREE.Mesh(new THREE.SphereGeometry(.39,20,16),skin);head.scale.set(.92,1.08,.94);head.position.y=2.38;head.castShadow=true;g.add(head);
+  addFunnyFace(g,p.name+"-"+p.id,2.38);
+
+  // شعر أو قبعة طباخ بتنوع
+  if(h%3!==1){
+    const hatBase=new THREE.Mesh(new THREE.CylinderGeometry(.40,.44,.18,20),shirt);hatBase.position.y=2.75;g.add(hatBase);
+    const hatTop=new THREE.Mesh(new THREE.SphereGeometry(.42,18,10,0,Math.PI*2,0,Math.PI/2),shirt);hatTop.position.y=2.87;g.add(hatTop);
+  }else{
+    const hair=new THREE.Mesh(new THREE.SphereGeometry(.40,16,10,0,Math.PI*2,0,Math.PI/2),mat(0x2b1b16,.9,0));
+    hair.position.y=2.69;g.add(hair);
+  }
+
+  const apron=new THREE.Mesh(new RoundedBoxGeometry(.69,.82,.07,3,.035),new THREE.MeshStandardMaterial({color:accent,roughness:.55}));
+  apron.position.set(0,1.40,.33);g.add(apron);
+  const pocket=new THREE.Mesh(new RoundedBoxGeometry(.30,.22,.05,3,.025),new THREE.MeshStandardMaterial({color:0xffffff,roughness:.7}));
+  pocket.position.set(0,1.18,.38);g.add(pocket);
+
+  const lLeg=new THREE.Mesh(new THREE.CapsuleGeometry(.13,.52,4,8),pants);lLeg.position.set(-.21,.52,0);g.add(lLeg);
+  const rLeg=lLeg.clone();rLeg.position.x=.21;g.add(rLeg);
+  for(const side of [-1,1]){
+    const shoe=new THREE.Mesh(new RoundedBoxGeometry(.30,.16,.48,3,.06),shoeMat);
+    shoe.position.set(side*.21,.11,.11);g.add(shoe);
+  }
+
+  const lArm=new THREE.Mesh(new THREE.CapsuleGeometry(.105,.48,4,8),shirt);lArm.position.set(-.53,1.50,0);lArm.rotation.z=.08;g.add(lArm);
+  const rArm=lArm.clone();rArm.position.x=.53;rArm.rotation.z=-.08;g.add(rArm);
+  for(const side of [-1,1]){
+    const hand=new THREE.Mesh(new THREE.SphereGeometry(.13,12,9),skin);hand.position.set(side*.57,1.06,.02);g.add(hand);
+  }
+
+  const name=labelSprite(p.name,p.id===me?.id?"#fde68a":"#ffffff","rgba(8,18,25,.72)");
+  name.position.y=3.34;name.scale.set(3.1,.72,1);g.add(name);
+
+  g.userData={lLeg,rLeg,lArm,rArm,lastX:0,lastZ:0,walkT:Math.random()*6,heldSprite:null};
+  playersGroup.add(g);playerMeshes.set(p.id,g);return g;
+}
+
+function updateHeldSprite(mesh,item){
+  const old=mesh.userData.heldSprite;
+  if(old){mesh.remove(old);mesh.userData.heldSprite=null}
+  if(!item)return;
+  const s=labelSprite(ITEM_LABEL[item]||item,"#ffffff","rgba(75,38,4,.88)");
+  s.position.set(0,2.55,.45);s.scale.set(2.45,.62,1);mesh.add(s);mesh.userData.heldSprite=s;
+}
+
+function updatePlayerMeshes(dt){
+  const fresh=freshPlayers(),ids=new Set(fresh.map(p=>p.id));
+  for(const [id,m] of playerMeshes){if(!ids.has(id)){playersGroup.remove(m);playerMeshes.delete(id)}}
+
+  for(const p of fresh){
+    let m=playerMeshes.get(p.id)||createChef(p);
+    const tx=p.x,tz=p.z;
+    const dx=tx-m.position.x,dz=tz-m.position.z;
+    const moving=Math.hypot(dx,dz)>.03;
+
+    if(p.id===me?.id){m.position.x=tx;m.position.z=tz}
+    else{
+      const interp=1-Math.exp(-10*dt);
+      m.position.x=THREE.MathUtils.lerp(m.position.x,tx,interp);
+      m.position.z=THREE.MathUtils.lerp(m.position.z,tz,interp);
+    }
+
+    m.rotation.y=THREE.MathUtils.lerp(m.rotation.y,p.rot||0,1-Math.exp(-12*dt));
+
+    if(m.userData._held!==p.held_item){m.userData._held=p.held_item;updateHeldSprite(m,p.held_item)}
+
+    if(moving){
+      m.userData.walkT+=dt*11;
+      const s=Math.sin(m.userData.walkT)*.55;
+      m.userData.lLeg.rotation.x=s;m.userData.rLeg.rotation.x=-s;
+      m.userData.lArm.rotation.x=-s*.55;m.userData.rArm.rotation.x=s*.55;
+      m.position.y=Math.abs(Math.sin(m.userData.walkT*2))*.025;
+    }else{
+      m.userData.lLeg.rotation.x*=.78;m.userData.rLeg.rotation.x*=.78;
+      m.userData.lArm.rotation.x*=.78;m.userData.rArm.rotation.x*=.78;m.position.y*=.75;
+    }
+  }
+
+  $("#playersCount").textContent=fresh.length;
+  const cashier=fresh.find(p=>p.role==="cashier");
+  if(me)roleView.textContent=me.role==="cashier"?"كاشير 💳":"طاقم عام";
+  if(cashier && cashier.id!==me?.id){
+    // يعرض وجود كاشير للطاقم بدون إزعاج الشاشة.
+  }
+}
+
+function updateCustomers(t,dt){
+  const active=[...orders.values()].filter(o=>["queued","waiting","ready"].includes(o.status));
+  const queued=active.filter(o=>o.status==="queued").sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+  const byTable=new Map(active.map(o=>[o.table_no,o]));
+  const pickupPos=new THREE.Vector3(0,0,.35);
+  const exitPos=new THREE.Vector3(0,0,17.4);
+
+  for(const [no,c] of customerByTable){
+    const order=byTable.get(no);
+
+    if(!order && c.userData.departing){
+      c.visible=true;
+      moveCustomerToward(c,exitPos,dt,2.5);
+      if(c.position.distanceTo(exitPos)<.45){
+        c.visible=false;c.userData.departing=false;c.position.set((no%2?-.8:.8),0,17.3);
+      }
+      continue;
+    }
+
+    c.visible=!!order;
+    if(!order)continue;
+
+    const complained=!!order.complained_at;
+    let target;
+
+    if(order.status==="queued"){
+      const qi=Math.max(0,queued.findIndex(x=>x.id===order.id));
+      target=new THREE.Vector3(9,0,4.3+qi*1.5);
+      const desired=complained?`وين الكاشير؟! 😡`:`${order.customer_name||"زبون"}: ${DISH_LABEL[order.item]}`;
+      setCustomerBubble(c,desired,complained?"#fecaca":"#ffffff",complained?"rgba(90,20,20,.94)":"rgba(38,27,16,.94)");
+    }else if(order.status==="waiting"){
+      target=tablePositions[no];
+      const desired=complained?"طلبي تأخر! 😡":"بانتظار الطلب 🍽️";
+      setCustomerBubble(c,desired,complained?"#fecaca":"#fde68a",complained?"rgba(90,20,20,.94)":"rgba(22,34,42,.94)");
+    }else{
+      target=pickupPos;
+      setCustomerBubble(c,"طلبي جاهز! 😋","#bbf7d0","rgba(15,55,34,.94)");
+    }
+
+    moveCustomerToward(c,target,dt,order.status==="ready"?2.7:2.05);
+
+    // حركة غضب إذا تأخر الطلب
+    if(complained){
+      c.userData.lArm.rotation.z=Math.sin(t*.015)*.65;
+      c.userData.rArm.rotation.z=-Math.sin(t*.015)*.65;
+      c.position.y+=Math.abs(Math.sin(t*.02))*0.018;
+    }
+
+    if(order.status==="ready" && c.position.distanceTo(pickupPos)<.55 && isHost() && !completingOrders.has(order.id)){
+      completeCustomerPickup(order,c);
+    }
+  }
+}
+function setCustomerBubble(c,text,color,bg){
+  if(c.userData.bubbleText===text)return;
+  if(c.userData.bubble)c.remove(c.userData.bubble);
+  const b=labelSprite(text,color,bg);b.position.y=3.45;b.scale.set(3.45,.86,1);c.add(b);
+  c.userData.bubble=b;c.userData.bubbleText=text;
+}
+function moveCustomerToward(c,target,dt,speed){
+  const dx=target.x-c.position.x,dz=target.z-c.position.z,dist=Math.hypot(dx,dz);
+  const moving=dist>.10;
+  if(moving){
+    const step=Math.min(dist,speed*dt);
+    c.position.x+=dx/dist*step;c.position.z+=dz/dist*step;c.rotation.y=Math.atan2(dx,dz);
+    c.userData.walkT+=dt*9.5;
+    const s=Math.sin(c.userData.walkT)*.55;
+    c.userData.lLeg.rotation.x=s;c.userData.rLeg.rotation.x=-s;
+    c.userData.lArm.rotation.x=-s*.48;c.userData.rArm.rotation.x=s*.48;
+  }else{
+    c.userData.lLeg.rotation.x*=.78;c.userData.rLeg.rotation.x*=.78;
+    c.userData.lArm.rotation.x*=.78;c.userData.rArm.rotation.x*=.78;
+  }
+  c.position.y=Math.abs(Math.sin(c.userData.walkT*2))*(moving?.023:.004);
+}
+async function completeCustomerPickup(order,c){
+  completingOrders.add(order.id);
+  const {data,error}=await sb.rpc("complete_restaurant_pickup",{p_order_id:order.id});
+  const r=Array.isArray(data)?data[0]:data;
+  completingOrders.delete(order.id);
+  if(error||!r?.ok)return;
+
+  c.userData.departing=true;
+  setCustomerBubble(c,"شكراً! 👋","#ffffff","rgba(24,55,41,.94)");
+  room={...room,balance:r.balance,xp:r.xp,level:r.level,expansion:r.expansion};
+  updateRoomHUD();
+  toast(`الزبون استلم طلبه • +${r.reward} ريال ⭐`);
+  beep(920,.1,"sine",.05);
+}
+
+function createTrashMesh(item){
+  const g=new THREE.Group();
+  if(item.kind==="cup"){
+    const cup=new THREE.Mesh(new THREE.CylinderGeometry(.18,.14,.42,14),mat(0xf8fafc,.6,.02));cup.rotation.z=.32;g.add(cup);
+    const lid=new THREE.Mesh(new THREE.CylinderGeometry(.19,.19,.035,14),mat(0xd1d5db,.55,.04));lid.position.y=.22;g.add(lid);
+  }else if(item.kind==="plate"){
+    const plate=new THREE.Mesh(new THREE.CylinderGeometry(.32,.32,.045,20),mat(0xf1f5f9,.4,.02));plate.rotation.z=.12;g.add(plate);
+  }else{
+    const bag=new THREE.Mesh(new RoundedBoxGeometry(.38,.48,.25,3,.08),mat(0x8b5a2b,.85,0));bag.rotation.z=.18;g.add(bag);
+  }
+  g.position.set(item.x,.16,item.z);g.rotation.y=Math.random()*Math.PI*2;trashGroup.add(g);trashMeshes.set(item.id,g);return g;
+}
+function updateTrashMeshes(){
+  const active=new Set([...trashItems.values()].filter(x=>!x.cleaned).map(x=>x.id));
+  for(const [id,m] of trashMeshes)if(!active.has(id)){trashGroup.remove(m);trashMeshes.delete(id)}
+  for(const item of trashItems.values())if(!item.cleaned&&!trashMeshes.has(item.id))createTrashMesh(item);
+}
+async function cleanNearestTrash(){
+  if(!nearestTrash)return;
+  const id=nearestTrash.id;
+  startJob("🧹 تنظيف الزبالة...",950,async()=>{
+    const {data,error}=await sb.rpc("clean_restaurant_trash",{p_trash_id:id});
+    const r=Array.isArray(data)?data[0]:data;
+    if(error||!r?.ok)return toast("تعذر التنظيف");
+    room.cleanliness=r.cleanliness;room.xp=r.xp;room.level=1+Math.floor((r.xp||0)/100);
+    updateRoomHUD();toast("تم تنظيف المكان +2 XP 🧹");beep(720,.07,"sine",.04);
+  });
+}
+async function monitorPatience(t){
+  if(!isHost()||t-lastPatienceCheck<1200)return;
+  lastPatienceCheck=t;
+  const now=Date.now();
+  for(const o of orders.values()){
+    if(!["queued","waiting"].includes(o.status)||o.complained_at||complaintLocks.has(o.id))continue;
+    const age=(now-new Date(o.created_at).getTime())/1000;
+    if(age>(o.patience_seconds||55)){
+      complaintLocks.add(o.id);
+      sb.rpc("mark_restaurant_complaint",{p_order_id:o.id}).finally(()=>complaintLocks.delete(o.id));
+    }
+  }
+}
+
+/* ----------------- Networking ----------------- */
+async function ensureAuth(){
+  let {data:{session}}=await sb.auth.getSession();
+  if(!session){
+    const {data,error}=await sb.auth.signInAnonymously();
+    if(error)throw new Error("تعذر تسجيل الدخول المؤقت: "+error.message);
+    session=data.session;
+  }
+  user=session.user;
+}
+
+async function createRoom(){
+  const name=$("#playerName").value.trim();
+  if(!name)return say("اكتب اسمك أولًا.");
+  lock(true);say("جاري فتح المطعم...",false);
+  try{
+    await ensureAuth();
+    let r=null;
+    for(let i=0;i<6&&!r;i++){
+      const {data,error}=await sb.from("restaurant_rooms")
+        .insert({code:code(),host_user_id:user.id})
+        .select().single();
+      if(!error)r=data;
+    }
+    if(!r)throw new Error("تعذر إنشاء المطعم.");
+    await enterRoom(r,name);
+  }catch(e){say(e.message);lock(false)}
+}
+
+async function joinRoom(){
+  const name=$("#playerName").value.trim(),c=$("#roomInput").value.trim().toUpperCase();
+  if(!name)return say("اكتب اسمك أولًا.");
+  if(c.length!==6)return say("أدخل كود المطعم المكوّن من 6 خانات.");
+  lock(true);say("جاري دخول المطعم...",false);
+  try{
+    await ensureAuth();
+    const {data:r,error}=await sb.from("restaurant_rooms").select("*").eq("code",c).maybeSingle();
+    if(error)throw error;if(!r)throw new Error("هذا المطعم غير موجود.");
+    await enterRoom(r,name);
+  }catch(e){say(e.message);lock(false)}
+}
+
+async function enterRoom(r,name){
+  room=r;init3D();
+  const startX=(Math.random()-.5)*4,startZ=12+Math.random()*2;
+  const payload={
+    room_id:r.id,user_id:user.id,session_id:crypto.randomUUID(),name,
+    x:startX,z:startZ,rot:Math.PI,held_item:null,role:"staff",updated_at:new Date().toISOString()
+  };
+  const {data,error}=await sb.from("restaurant_players")
+    .upsert(payload,{onConflict:"room_id,user_id"}).select().single();
+  if(error)throw error;
+
+  me=data;players.set(me.id,me);
+  $("#codeView").textContent=r.code;
+  heldView.textContent="لا شيء";
+  updateRoomHUD();
+  roleView.textContent=me.role==="cashier"?"كاشير 💳":"طاقم عام";
+
+  lobby.classList.add("hidden");game.classList.remove("hidden");
+  await subscribe();
+  running=true;
+  heartbeat=setInterval(()=>syncPlayer(true),3500);
+  requestAnimationFrame(loop);
+  lock(false);say("");
+  toast("مرحبًا في المطعم 👨‍🍳");
+}
+
+async function subscribe(){
+  const {data:ps}=await sb.from("restaurant_players").select("*").eq("room_id",room.id);
+  (ps||[]).forEach(p=>players.set(p.id,p));
+
+  const {data:os}=await sb.from("restaurant_orders").select("*").eq("room_id",room.id).in("status",["queued","waiting","ready"]).order("created_at");
+  (os||[]).forEach(o=>orders.set(o.id,o));
+
+  const {data:inv}=await sb.from("restaurant_inventory").select("*").eq("room_id",room.id).maybeSingle();
+  if(inv)inventory={meat:inv.meat,vegetables:inv.vegetables,pasta:inv.pasta};
+
+  const {data:trash}=await sb.from("restaurant_trash").select("*").eq("room_id",room.id).eq("cleaned",false);
+  (trash||[]).forEach(x=>trashItems.set(x.id,x));updateTrashMeshes();
+
+  roomChannel=sb.channel("restaurant-room-"+room.id)
+    .on("postgres_changes",{event:"UPDATE",schema:"public",table:"restaurant_rooms",filter:`id=eq.${room.id}`},p=>{
+      room={...room,...p.new};updateRoomHUD();
+    }).subscribe();
+
+  playerChannel=sb.channel("restaurant-players-"+room.id)
+    .on("postgres_changes",{event:"*",schema:"public",table:"restaurant_players",filter:`room_id=eq.${room.id}`},p=>{
+      if(p.eventType==="DELETE")players.delete(p.old.id);
+      else{
+        if(p.new.id===me?.id){
+          // لا نعيد موضع اللاعب المحلي من الشبكة؛ هذا يمنع التقطيع والرجوع للخلف أثناء المشي.
+          me={...me,role:p.new.role,held_item:p.new.held_item,updated_at:p.new.updated_at};
+          players.set(me.id,{...me});
+          roleView.textContent=me.role==="cashier"?"كاشير 💳":"طاقم عام";
+        }else{
+          players.set(p.new.id,p.new);
+        }
+      }
+    }).subscribe();
+
+  inventoryChannel=sb.channel("restaurant-inventory-"+room.id)
+    .on("postgres_changes",{event:"UPDATE",schema:"public",table:"restaurant_inventory",filter:`room_id=eq.${room.id}`},p=>{
+      inventory={meat:p.new.meat,vegetables:p.new.vegetables,pasta:p.new.pasta};
+      renderLaptop();
+    }).subscribe();
+
+  trashChannel=sb.channel("restaurant-trash-"+room.id)
+    .on("postgres_changes",{event:"*",schema:"public",table:"restaurant_trash",filter:`room_id=eq.${room.id}`},p=>{
+      if(p.eventType==="DELETE")trashItems.delete(p.old.id);
+      else trashItems.set(p.new.id,p.new);
+      updateTrashMeshes();
+    }).subscribe();
+
+  orderChannel=sb.channel("restaurant-orders-"+room.id)
+    .on("postgres_changes",{event:"*",schema:"public",table:"restaurant_orders",filter:`room_id=eq.${room.id}`},p=>{
+      if(p.eventType==="DELETE")orders.delete(p.old.id);
+      else if(["queued","waiting","ready"].includes(p.new.status))orders.set(p.new.id,p.new);
+      else orders.delete(p.new.id);
+      renderOrders();
+      if(p.eventType==="INSERT"){
+        toast("دخل زبون جديد وينتظر الكاشير 🧍");
+        beep(620,.08,"sine",.045);
+      }else if(p.eventType==="UPDATE"&&p.new.status==="waiting"&&p.old.status==="queued"){
+        toast(`الكاشير سجل: ${DISH_LABEL[p.new.item]} • طاولة ${p.new.table_no}`);
+        beep(790,.08,"sine",.045);
+      }else if(p.eventType==="UPDATE"&&p.new.complained_at&&!p.old.complained_at){
+        toast(`${p.new.customer_name||"الزبون"} بدأ يخاصم 😡 السمعة نقصت`);
+        beep(180,.15,"sawtooth",.045);
+      }
+    }).subscribe();
+
+  renderOrders();
+}
+
+function openLaptop(){
+  if(me?.role!=="cashier")return toast("يجب أن تكون موظف الكاشير");
+  laptopOverlay.classList.remove("hidden");
+  laptopTab="customers";renderLaptop();
+  keys.clear();velX=0;velZ=0;
+}
+function closeLaptop(){laptopOverlay.classList.add("hidden")}
+function renderLaptop(){
+  if(laptopOverlay.classList.contains("hidden"))return;
+
+  document.querySelectorAll(".laptopTab").forEach(b=>b.classList.toggle("active",b.dataset.laptopTab===laptopTab));
+
+  const queued=[...orders.values()].filter(o=>o.status==="queued").sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+
+  if(laptopTab==="customers"){
+    laptopBody.innerHTML=`
+      <div class="cashierHint">الزبائن الواقفون أمام الكاشير يظهرون هنا. اقرأ طلب الزبون ثم اضغط «إضافة للمطبخ» ليظهر الطلب لبقية الطاقم.</div>
+      <div class="laptopGrid">
+        ${queued.length?queued.map(o=>`
+          <div class="laptopCard">
+            <h4>🧍 زبون طاولة ${o.table_no}</h4>
+            <p>الطلب: <b>${DISH_LABEL[o.item]}</b></p>
+            <p>قيمة الطلب عند التقديم: ${o.reward} ريال</p>
+            <button class="laptopAction acceptCustomerBtn" data-order-id="${o.id}" type="button">إضافة للمطبخ 🧾</button>
+          </div>`).join(""):'<div class="laptopCard"><h4>لا يوجد زبائن في الطابور</h4><p>سيصل زبون جديد بعد قليل.</p></div>'}
+      </div>`;
+    laptopBody.querySelectorAll(".acceptCustomerBtn").forEach(b=>b.onclick=()=>acceptCustomerOrder(b.dataset.orderId));
+    return;
+  }
+
+  if(laptopTab==="manual"){
+    laptopBody.innerHTML=`
+      <div class="cashierHint">تقدر تضيف طلب يدوي للطاولة، بشرط ألا يكون عندها طلب نشط حاليًا.</div>
+      <div class="laptopCard">
+        <div class="manualForm">
+          <label>الطاولة<select id="manualTable">
+            ${activeTableNumbers().map(n=>`<option value="${n}">طاولة ${n}</option>`).join("")}
+          </select></label>
+          <label>الطلب<select id="manualDish">
+            <option value="burger">🍔 برجر</option><option value="salad">🥗 سلطة</option><option value="pasta">🍝 باستا</option>
+          </select></label>
+          <button id="manualAddBtn" class="laptopAction green" type="button">إضافة الطلب</button>
+        </div>
+      </div>`;
+    $("#manualAddBtn").onclick=createManualOrder;
+    return;
+  }
+
+  if(laptopTab==="stock"){
+    laptopBody.innerHTML=`
+    <div class="cashierHint">من هنا تطلب مخزونًا للمطعم. قيمة الشراء تُخصم مباشرة من رصيد المطعم ويظهر المخزون عند جميع اللاعبين.</div>
+    <div class="laptopCard">
+      <h4>📦 مخزون المطبخ</h4>
+      <div class="stockRow"><span>🥩 لحم</span><b class="stockCount">${inventory.meat}</b><span class="price">8 ريال / قطعة</span></div>
+      <button class="laptopAction amber buyStockBtn" data-kind="meat" data-qty="5" type="button">اطلب 5 لحم — 40 ريال</button>
+      <div class="stockRow"><span>🥬 خضار</span><b class="stockCount">${inventory.vegetables}</b><span class="price">5 ريال / قطعة</span></div>
+      <button class="laptopAction amber buyStockBtn" data-kind="vegetables" data-qty="5" type="button">اطلب 5 خضار — 25 ريال</button>
+      <div class="stockRow"><span>🍝 مكرونة</span><b class="stockCount">${inventory.pasta}</b><span class="price">6 ريال / قطعة</span></div>
+      <button class="laptopAction amber buyStockBtn" data-kind="pasta" data-qty="5" type="button">اطلب 5 مكرونة — 30 ريال</button>
+      <p>رصيد المطعم الحالي: <b>${room?.balance||0} ريال</b></p>
+    </div>`;
+  laptopBody.querySelectorAll(".buyStockBtn").forEach(b=>b.onclick=()=>buyStock(b.dataset.kind,Number(b.dataset.qty)));
+    return;
+  }
+
+  const exp=room?.expansion||1,level=room?.level||1;
+  const nextCost=exp===1?250:exp===2?600:0;
+  const needLevel=exp===1?2:exp===2?4:0;
+  laptopBody.innerHTML=`
+    <div class="cashierHint">كل 100 XP يرفع مستوى المطعم. الخدمة السريعة والتنظيف يرفعان XP. التوسعة تفتح مساحة وطاولات جديدة.</div>
+    <div class="laptopGrid">
+      <div class="laptopCard">
+        <h4>⭐ تقدم المطعم</h4>
+        <p>المستوى: <b>${level}</b></p>
+        <p>XP: <b>${room?.xp||0}</b></p>
+        <p>السمعة: <b>${room?.reputation??100}%</b></p>
+        <p>النظافة: <b>${room?.cleanliness??100}%</b></p>
+      </div>
+      <div class="laptopCard">
+        <h4>🏗️ مساحة المطعم</h4>
+        <p>مرحلة التوسعة الحالية: <b>${exp}/3</b></p>
+        ${exp<3
+          ? `<p>التوسعة القادمة تحتاج لفل ${needLevel} وتكلف ${nextCost} ريال.</p>
+             <button id="expandRestaurantBtn" class="laptopAction green" type="button" ${(!isHost()||level<needLevel||room.balance<nextCost)?"disabled":""}>توسيع المطعم 🏗️</button>`
+          : `<p>✅ وصلت لأقصى توسعة حاليًا.</p>`}
+        ${!isHost()?'<p>التوسعة متاحة لصاحب الغرفة فقط.</p>':""}
+      </div>
+    </div>`;
+  const eb=$("#expandRestaurantBtn");if(eb)eb.onclick=purchaseExpansion;
+}
+async function acceptCustomerOrder(id){
+  const {data,error}=await sb.rpc("accept_restaurant_order",{p_order_id:id});
+  if(error||!data)return toast("تعذر إضافة الطلب");
+  toast(`تم إرسال ${DISH_LABEL[data.item]} للمطبخ 🧾`);beep(820,.08,"sine",.05);
+  renderLaptop();
+}
+async function createManualOrder(){
+  const table=Number($("#manualTable").value),item=$("#manualDish").value;
+  const {data,error}=await sb.rpc("create_manual_restaurant_order",{p_room:room.id,p_table:table,p_item:item});
+  if(error)return toast(error.message.includes("active order")?"هذه الطاولة عندها طلب نشط":"تعذر إضافة الطلب");
+  toast(`تمت إضافة ${DISH_LABEL[item]} لطاولة ${table}`);renderLaptop();
+}
+async function purchaseExpansion(){
+  const {data,error}=await sb.rpc("purchase_restaurant_expansion",{p_room:room.id});
+  const r=Array.isArray(data)?data[0]:data;
+  if(error||!r?.ok)return toast("تأكد من اللفل والرصيد المطلوب");
+  room.balance=r.balance;room.expansion=r.expansion;
+  updateRoomHUD();renderLaptop();
+  toast(`تم توسيع المطعم! المرحلة ${r.expansion}/3 🏗️`);
+  beep(520,.16,"square",.045);
+}
+async function buyStock(kind,qty){
+  const {data,error}=await sb.rpc("purchase_restaurant_stock",{p_room:room.id,p_kind:kind,p_qty:qty});
+  const r=Array.isArray(data)?data[0]:data;
+  if(error||!r?.ok)return toast("الرصيد غير كافٍ أو تعذر الشراء");
+  room.balance=r.balance;$("#balanceView").textContent=r.balance;
+  toast("تم طلب المخزون للمطعم 📦");beep(690,.08,"sine",.045);renderLaptop();
+}
+async function takeIngredient(kind,item){
+  const {data,error}=await sb.rpc("take_restaurant_ingredient",{p_room:room.id,p_kind:kind});
+  const r=Array.isArray(data)?data[0]:data;
+  if(error||!r?.ok)return toast("المخزون منتهي — اطلب كمية من لابتوب الكاشير");
+  setHeld(item);
+  toast(`أخذت ${ITEM_LABEL[item]}`);
+}
+function renderOrders(){
+  const list=[...orders.values()].filter(o=>["waiting","ready"].includes(o.status)).sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+  const queued=[...orders.values()].filter(o=>o.status==="queued").sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+
+  if(!list.length){
+    ordersList.innerHTML='<div class="emptyOrders">لا توجد طلبات في المطبخ الآن.</div>';
+  }else{
+    ordersList.innerHTML=list.slice(0,8).map(o=>{
+      const age=(Date.now()-new Date(o.created_at).getTime())/1000;
+      const cls=o.complained_at?"late":age>35?"warn":"";
+      const state=o.status==="ready"?"✅ جاهز للاستلام":o.complained_at?"😡 متأخر":"👨‍🍳 قيد التحضير";
+      return `<div class="order ${cls}">
+        <div class="orderTop"><span class="orderDish">${DISH_LABEL[o.item]}</span><b>طاولة ${o.table_no}</b></div>
+        <div class="orderTime">${state} • ${o.customer_name||"زبون"} • ${Math.floor(age)} ث</div>
+      </div>`;
+    }).join("");
+  }
+
+  if(queued.length){
+    const cashier=freshPlayers().find(p=>p.role==="cashier");
+    queueInfo.innerHTML=`<b>${queued.length} زبون ينتظر</b><br>${cashier?`الكاشير: ${esc(cashier.name)}`:"⚠️ لا يوجد كاشير!"}`;
+  }else queueInfo.innerHTML=`لا يوجد زبائن في الطابور.${freshPlayers().some(p=>p.role==="cashier")?"":"<br>💳 لا يوجد كاشير حاليًا."}`;
+
+  updateTaskText();
+  renderLaptop();
+}
+
+async function maybeGenerateOrder(t){
+  if(!isHost()||!room||t-hostOrderTimer<10500)return;
+  hostOrderTimer=t;
+
+  const active=[...orders.values()].filter(o=>["queued","waiting","ready"].includes(o.status));
+  const maxOrders=4+(room?.expansion||1)*2;
+  if(active.length>=maxOrders)return;
+
+  const used=new Set(active.map(o=>o.table_no));
+  const available=activeTableNumbers().filter(n=>!used.has(n));
+  if(!available.length)return;
+
+  const table=available[Math.floor(Math.random()*available.length)];
+  const dishes=["burger","salad","pasta"];
+  const item=dishes[Math.floor(Math.random()*dishes.length)];
+  const reward={burger:35,salad:25,pasta:30}[item];
+
+  const customer_name=CUSTOMER_NAMES[Math.floor(Math.random()*CUSTOMER_NAMES.length)];
+  const patience_seconds=45+Math.floor(Math.random()*26);
+  await sb.from("restaurant_orders").insert({room_id:room.id,table_no:table,item,reward,status:"queued",customer_name,patience_seconds});
+}
+
+/* ----------------- Gameplay ----------------- */
+function updateTaskText(){
+  const held=me?.held_item;
+  let title="ابدأ بتحضير أحد الطلبات";
+  let text="خذ مكوّنًا من المطبخ ثم أكمل الوصفة.";
+
+  const queued=[...orders.values()].filter(o=>o.status==="queued");
+  const kitchen=[...orders.values()].filter(o=>["waiting","ready"].includes(o.status));
+
+  if(me?.role==="cashier"){
+    title=queued.length?"💳 هناك زبائن عند الكاشير":"💳 أنت مسؤول الكاشير";
+    text=queued.length?"ابقَ عند جهاز الكاشير واستلم الطلب التالي بالضغط على E.":"ابقَ قريبًا من الكاشير لاستقبال الزبائن القادمين.";
+  }else if(queued.length&&!freshPlayers().some(p=>p.role==="cashier")){
+    title="⚠️ المطعم يحتاج كاشير";
+    text="اذهب إلى محطة الكاشير واضغط E لاستلام الوظيفة. لن تدخل الطلبات للمطبخ بدون كاشير.";
+  }else if(!orders.size){
+    title="المطعم هادئ الآن ☕";
+    text="تحرك مع أصدقائك؛ سيصل زبون جديد بعد قليل.";
+  }else if(!held){
+    title="اختر طلبًا من القائمة 🧾";
+    text="برجر: لحم ← شواية • سلطة: خضار ← تقطيع • باستا: مكرونة ← قدر.";
+  }else if(held==="raw_meat"){title="🥩 اللحم يحتاج طبخ";text="اذهب إلى الشواية واضغط E."}
+  else if(held==="vegetables"){title="🥬 الخضار تحتاج تقطيع";text="اذهب إلى لوح التقطيع واضغط E."}
+  else if(held==="dry_pasta"){title="🍝 المكرونة تحتاج طبخ";text="اذهب إلى القدر واضغط E."}
+  else if(["burger","salad","pasta"].includes(held)){title=`${DISH_LABEL[held]} جاهز للتقديم`;text="اذهب إلى جرس التقديم لتسليم الطلب المطابق."}
+
+  taskBox.innerHTML=`<strong>${title}</strong><span>${text}</span>`;
+}
+
+function stationActionText(s){
+  if(!s)return "";
+  const held=me?.held_item;
+  if(s.kind==="meat")return held?"يداك مشغولتان":"خذ لحمًا نيئًا";
+  if(s.kind==="veg")return held?"يداك مشغولتان":"خذ خضارًا";
+  if(s.kind==="pastaBox")return held?"يداك مشغولتان":"خذ مكرونة جافة";
+  if(s.kind==="grill")return held==="raw_meat"?"اشوِ اللحم وحوّله إلى برجر":"تحتاج لحمًا نيئًا";
+  if(s.kind==="chop")return held==="vegetables"?"قطّع الخضار للسلطة":"تحتاج خضارًا";
+  if(s.kind==="pot")return held==="dry_pasta"?"اطبخ المكرونة":"تحتاج مكرونة جافة";
+  if(s.kind==="serve")return ["burger","salad","pasta"].includes(held)?"قدّم الطبق للطلب المطابق":"احمل طبقًا جاهزًا أولًا";
+  if(s.kind==="cashier"){
+    const q=[...orders.values()].filter(o=>o.status==="queued").length;
+    if(me?.role==="cashier")return q?`افتح اللابتوب — ${q} زبون ينتظر`:"افتح لابتوب الكاشير";
+    return freshPlayers().some(p=>p.role==="cashier")?"يوجد كاشير آخر يعمل الآن":"استلم وظيفة الكاشير";
+  }
+  if(s.kind==="trash")return held?"ارمِ ما تحمله":"لا تحمل شيئًا";
+  return "";
+}
+
+function updateNearestStation(){
+  if(!me)return;
+
+  nearestTrash=null;
+  let trashD=99;
+  for(const item of trashItems.values()){
+    if(item.cleaned)continue;
+    const d=Math.hypot(me.x-item.x,me.z-item.z);
+    if(d<trashD){trashD=d;nearestTrash=item}
+  }
+  if(trashD>1.75)nearestTrash=null;
+
+  let best=null,bestD=99;
+  for(const s of stations){
+    const d=Math.hypot(me.x-s.pos.x,me.z-s.pos.z);
+    if(d<bestD){bestD=d;best=s}
+  }
+  nearestStation=bestD<2.55?best:null;
+
+  for(const s of stations){
+    const near=s===nearestStation&&!nearestTrash;
+    s.ring.material.opacity=near?.72:.10;
+    const sc=near?1.10:1;s.ring.scale.lerp(new THREE.Vector3(sc,sc,sc),.18);
+    s.sprite.visible=near;
+  }
+
+  if(nearestTrash&&!actionJob){
+    interactBox.classList.remove("hidden");
+    interactBox.innerHTML=`<b>E • 🧹 تنظيف</b><small>نظافة المطعم تؤثر على المستوى والسمعة.</small>`;
+  }else if(nearestStation&&!actionJob){
+    interactBox.classList.remove("hidden");
+    interactBox.innerHTML=`<b>E • ${esc(nearestStation.label)}</b><small>${esc(stationActionText(nearestStation))}</small>`;
+  }else interactBox.classList.add("hidden");
+}
+
+function setHeld(item){
+  me.held_item=item||null;players.set(me.id,{...me});
+  heldView.textContent=item?(ITEM_LABEL[item]||item):"لا شيء";
+  updateTaskText();
+  syncPlayer(true);
+}
+
+function startJob(label,duration,onDone){
+  if(actionJob)return;
+  actionJob={label,duration,start:performance.now(),onDone};
+  progressLabel.textContent=label;progressFill.style.width="0%";progressWrap.classList.remove("hidden");
+}
+
+function tickJob(t){
+  if(!actionJob)return;
+  const p=clamp((t-actionJob.start)/actionJob.duration,0,1);
+  progressFill.style.width=(p*100)+"%";
+  if(p>=1){
+    const done=actionJob.onDone;actionJob=null;progressWrap.classList.add("hidden");
+    done?.();beep(720,.08,"sine",.05)
+  }
+}
+
+async function interact(){
+  if(actionJob||!me)return;
+  if(nearestTrash){await cleanNearestTrash();return}
+  if(!nearestStation)return;
+  const k=nearestStation.kind,h=me.held_item;
+
+  if(k==="meat"){
+    if(h)return toast("يداك مشغولتان");
+    await takeIngredient("meat","raw_meat");return;
+  }
+  if(k==="veg"){
+    if(h)return toast("يداك مشغولتان");
+    await takeIngredient("vegetables","vegetables");return;
+  }
+  if(k==="pastaBox"){
+    if(h)return toast("يداك مشغولتان");
+    await takeIngredient("pasta","dry_pasta");return;
+  }
+  if(k==="grill"){
+    if(h!=="raw_meat")return toast("تحتاج لحمًا نيئًا");
+    startJob("🔥 شوي البرجر...",2600,()=>{setHeld("burger");toast("البرجر جاهز 🍔")});return;
+  }
+  if(k==="chop"){
+    if(h!=="vegetables")return toast("تحتاج خضارًا");
+    startJob("🔪 تقطيع الخضار...",1900,()=>{setHeld("salad");toast("السلطة جاهزة 🥗")});return;
+  }
+  if(k==="pot"){
+    if(h!=="dry_pasta")return toast("تحتاج مكرونة جافة");
+    startJob("♨️ طبخ الباستا...",2800,()=>{setHeld("pasta");toast("الباستا جاهزة 🍝")});return;
+  }
+  if(k==="cashier"){
+    if(me.role!=="cashier"){
+      const {data,error}=await sb.rpc("claim_cashier_role",{p_room:room.id});
+      if(error||data!==true)return toast("الكاشير مشغول بواسطة لاعب آخر");
+      me.role="cashier";players.set(me.id,{...me});roleView.textContent="كاشير 💳";
+      updateTaskText();renderOrders();toast("أصبحت مسؤول الكاشير 💳");beep(650,.08,"sine",.05);
+      openLaptop();
+      return;
+    }
+    openLaptop();
+    return;
+  }
+  if(k==="trash"){
+    if(!h)return toast("لا تحمل شيئًا");
+    setHeld(null);toast("تم التخلص منه 🗑️");return;
+  }
+  if(k==="serve"){
+    if(!["burger","salad","pasta"].includes(h))return toast("احمل طبقًا جاهزًا أولًا");
+    const match=[...orders.values()].filter(o=>o.status==="waiting"&&o.item===h).sort((a,b)=>new Date(a.created_at)-new Date(b.created_at))[0];
+    if(!match)return toast("لا يوجد طلب لهذا الطبق الآن");
+
+    startJob("🍽️ وضع الطلب في منطقة الاستلام...",900,async()=>{
+      const {data,error}=await sb.rpc("serve_restaurant_order",{p_order_id:match.id,p_item:h});
+      const result=Array.isArray(data)?data[0]:data;
+      if(error||!result?.ok){toast("تعذر تجهيز الطلب للاستلام");return}
+      setHeld(null);
+      toast("الطلب جاهز — الزبون جاي يستلمه 🍽️");
+      beep(880,.1,"sine",.05)
+    });
+  }
+}
+
+function collides(x,z){
+  const r=.55,exp=room?.expansion||1;
+  const minX=exp>=3?-26.0:-13.9;
+  const maxX=exp>=2?26.0:13.9;
+  if(x<minX||x>maxX||z<-10.8||z>14.8)return true;
+
+  const all=[...collisions];
+  if(exp>=2)all.push(...expansion2Collisions);
+  if(exp>=3)all.push(...expansion3Collisions);
+
+  for(const c of all){
+    if(x+r>c.x-c.w/2&&x-r<c.x+c.w/2&&z+r>c.z-c.d/2&&z-r<c.z+c.d/2)return true
+  }
+  return false;
+}
+
+function move(dt){
+  if(!me||!laptopOverlay.classList.contains("hidden"))return false;
+
+  let sx=0,sz=0;
+  if(!actionJob){
+    if(keys.has("ArrowUp")||keys.has("w"))sz-=1;
+    if(keys.has("ArrowDown")||keys.has("s"))sz+=1;
+    if(keys.has("ArrowLeft")||keys.has("a"))sx-=1;
+    if(keys.has("ArrowRight")||keys.has("d"))sx+=1;
+  }
+
+  let targetX=0,targetZ=0;
+  if(sx||sz){
+    const len=Math.hypot(sx,sz);sx/=len;sz/=len;
+    const cos=Math.cos(camYaw),sin=Math.sin(camYaw);
+    const dx=sx*cos+sz*sin,dz=-sx*sin+sz*cos;
+    const maxSpeed=4.65;
+    targetX=dx*maxSpeed;targetZ=dz*maxSpeed;
+  }
+
+  // تسارع وتباطؤ تدريجيان بدل الانتقال الفوري للسرعة.
+  const response=(sx||sz)?12:9;
+  const blend=1-Math.exp(-response*dt);
+  velX=THREE.MathUtils.lerp(velX,targetX,blend);
+  velZ=THREE.MathUtils.lerp(velZ,targetZ,blend);
+
+  if(Math.hypot(velX,velZ)<.025){velX=0;velZ=0;return false}
+
+  const nx=me.x+velX*dt,nz=me.z+velZ*dt;
+  if(!collides(nx,me.z))me.x=nx; else velX=0;
+  if(!collides(me.x,nz))me.z=nz; else velZ=0;
+
+  if(Math.hypot(velX,velZ)>.12)me.rot=Math.atan2(velX,velZ);
+  players.set(me.id,{...me});
+  return true;
+}
+
+async function syncPlayer(force=false){
+  if(!me||!room)return;
+  const {error}=await sb.from("restaurant_players").update({
+    x:me.x,z:me.z,rot:me.rot||0,held_item:me.held_item||null,updated_at:new Date().toISOString()
+  }).eq("id",me.id);
+  if(error)console.warn(error.message);
+}
+
+function updateCamera(dt){
+  if(!me)return;
+  const horizontal=Math.cos(camPitch)*camDist;
+  const height=Math.sin(camPitch)*camDist;
+  const desired=new THREE.Vector3(
+    me.x+Math.sin(camYaw)*horizontal,
+    1.8+height,
+    me.z+Math.cos(camYaw)*horizontal
+  );
+  camera.position.lerp(desired,1-Math.pow(.00045,dt));
+  camera.lookAt(new THREE.Vector3(me.x,1.55,me.z));
+}
+
+function installCameraControls(){
+  const c=renderer.domElement;
+  c.addEventListener("pointerdown",e=>{
+    if(e.button!==undefined&&e.button!==0)return;
+    dragging=true;pointerId=e.pointerId;lastPX=e.clientX;lastPY=e.clientY;
+    try{c.setPointerCapture(e.pointerId)}catch{}
+  });
+  c.addEventListener("pointermove",e=>{
+    if(!dragging||e.pointerId!==pointerId)return;
+    const dx=e.clientX-lastPX,dy=e.clientY-lastPY;lastPX=e.clientX;lastPY=e.clientY;
+    camYaw-=dx*.006;camPitch=clamp(camPitch-dy*.0045,.22,1.02);
+  });
+  const stop=e=>{if(e.pointerId!==pointerId)return;dragging=false;pointerId=null;try{c.releasePointerCapture(e.pointerId)}catch{}};
+  c.addEventListener("pointerup",stop);c.addEventListener("pointercancel",stop);
+  c.addEventListener("wheel",e=>{e.preventDefault();camDist=clamp(camDist+e.deltaY*.01,6.5,18)},{passive:false});
+}
+
+function resetCamera(){camYaw=0;camPitch=.47;camDist=10.5;toast("تم إرجاع الكاميرا 🎥")}
+
+async function leave(){
+  running=false;if(heartbeat)clearInterval(heartbeat);
+  try{
+    if(me)await sb.from("restaurant_players").delete().eq("id",me.id);
+    if(roomChannel)await sb.removeChannel(roomChannel);
+    if(playerChannel)await sb.removeChannel(playerChannel);
+    if(orderChannel)await sb.removeChannel(orderChannel);
+    if(inventoryChannel)await sb.removeChannel(inventoryChannel);
+    if(trashChannel)await sb.removeChannel(trashChannel);
+  }catch{}
+  for(const [,m] of playerMeshes)playersGroup.remove(m);
+  playerMeshes.clear();players.clear();orders.clear();trashItems.clear();
+  for(const [,m] of trashMeshes)trashGroup.remove(m);trashMeshes.clear();
+  room=null;me=null;nearestStation=null;actionJob=null;velX=0;velZ=0;
+  closeLaptop();
+  game.classList.add("hidden");lobby.classList.remove("hidden");lock(false);
+}
+
+/* ----------------- Main loop ----------------- */
+function loop(t){
+  if(!running)return;
+  requestAnimationFrame(loop);
+  const dt=Math.min(clock.getDelta(),.035);
+
+  const moved=move(dt);
+  if(moved&&t-lastSync>155){lastSync=t;syncPlayer()}
+  updateNearestStation();
+  tickJob(t);
+  maybeGenerateOrder(t);
+  monitorPatience(t);
+  updatePlayerMeshes(dt);
+  updateCustomers(t,dt);
+  updateKitchenDoor(dt);
+  updateCamera(dt);
+
+  // subtle restaurant life
+  for(const s of stations)s.ring.rotation.z+=dt*.16;
+
+  renderer.render(scene,camera);
+
+  if(Math.floor(t/1000)!==Math.floor((t-dt*1000)/1000))renderOrders();
+}
+
+/* ----------------- Inputs ----------------- */
+$("#createBtn").onclick=createRoom;
+$("#joinBtn").onclick=joinRoom;
+$("#exitBtn").onclick=leave;
+$("#actionBtn").onclick=interact;
+$("#closeLaptopBtn").onclick=closeLaptop;
+document.querySelectorAll(".laptopTab").forEach(b=>b.onclick=()=>{laptopTab=b.dataset.laptopTab;renderLaptop()});
+$("#resetCamBtn").onclick=resetCamera;
+$("#zoomInBtn").onclick=()=>camDist=clamp(camDist-1.4,6.5,18);
+$("#zoomOutBtn").onclick=()=>camDist=clamp(camDist+1.4,6.5,18);
+
+$("#roomInput").addEventListener("input",e=>e.target.value=e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,6));
+
+addEventListener("keydown",e=>{
+  if(["INPUT","TEXTAREA"].includes(document.activeElement?.tagName))return;
+  const k=e.key.length===1?e.key.toLowerCase():e.key;
+  if(k==="Escape"&&!laptopOverlay.classList.contains("hidden")){e.preventDefault();closeLaptop();return}
+  if(!laptopOverlay.classList.contains("hidden"))return;
+  if(k==="e"){e.preventDefault();interact();return}
+  if(k==="r"){e.preventDefault();resetCamera();return}
+  if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","w","a","s","d"].includes(k)){e.preventDefault();keys.add(k)}
+});
+addEventListener("keyup",e=>keys.delete(e.key.length===1?e.key.toLowerCase():e.key));
+
+document.querySelectorAll(".ctrl[data-key]").forEach(b=>{
+  const k=b.dataset.key;
+  const on=e=>{e.preventDefault();keys.add(k)},off=e=>{e.preventDefault();keys.delete(k)};
+  b.addEventListener("pointerdown",on);b.addEventListener("pointerup",off);
+  b.addEventListener("pointercancel",off);b.addEventListener("pointerleave",off);
+});
+
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)syncPlayer(true)});
+</script>
+</body>
+</html>
